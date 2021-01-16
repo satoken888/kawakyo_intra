@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Built-By: satokent
+Build-Jdk: 11.0.9
+Implementation-Title: kawakyo_cocktail Maven Webapp
+Implementation-Version: 0.0.1-SNAPSHOT
+Implementation-Vendor-Id: kawakyo_cocktail
+Implementation-Vendor: Pivotal Software, Inc.
+Implementation-URL: http://maven.apache.org
+Created-By: Maven Integration for Eclipse
+
