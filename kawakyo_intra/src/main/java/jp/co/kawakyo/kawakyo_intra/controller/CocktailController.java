@@ -29,7 +29,7 @@ public class CocktailController {
 	public String helloWorld(Model model) {
 
 		logger.info("[START] ORALCEに接続して受注データを取得します。");
-		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
+		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy年MM月dd日");
 
 		/*当日の売上金額を取得*/
 		Long todayEarnings = earningsCalculate.calculateTodayEarnings();
