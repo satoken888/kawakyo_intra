@@ -8,12 +8,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import jp.co.kawakyo.kawakyo_intra.repository.EarningsRepository;
 import jp.co.kawakyo.kawakyo_intra.repository.OrderRepository;
+import jp.co.kawakyo.kawakyo_intra.utils.ConvertUtils;
 
 @Service
 public class EarningsCalculate {
@@ -75,6 +77,59 @@ public class EarningsCalculate {
 			someDayEarnings.put(String.valueOf(obj[0]),Long.valueOf(String.valueOf(obj[1])));
 		}
 		return someDayEarnings;
+	}
+
+	/**
+	 * 定休日の日に０の売上を付与する
+	 * @param earnings
+	 * @return
+	 */
+	public Map<String, Long> addHolidayEarnings(int searchYear,int searchMonth,  Map<String,Long> earnings) {
+
+		Calendar cal = Calendar.getInstance();
+		//今月の初日を設定
+		cal.setTime(new Date());
+		cal.set(Calendar.DAY_OF_MONTH,1);
+
+		String year = String.valueOf(searchYear);
+		String month = searchMonth + 1 < 10 ? "0" + String.valueOf(searchMonth+1) : String.valueOf(searchMonth+1);
+//		String day = cal.get(Calendar.DATE) < 10 ? "0" + String.valueOf(cal.get(Calendar.DATE)) : String.valueOf(cal.get(Calendar.DATE));
+
+		cal.setTime(ConvertUtils.covDate(new Date(), false));
+		int lastDay = cal.get(Calendar.DATE);
+
+		for(int i = 1; i <= lastDay;i++) {
+			String day = i < 10 ? "0" + String.valueOf(i) :String.valueOf(i);
+			String compareDateStr = year + month + day;
+
+			if(!earnings.containsKey(compareDateStr)) {
+				earnings.put(compareDateStr, 0L);
+			}
+		}
+
+
+		Map<String, Long> sortedEarnings = new TreeMap<String, Long>(earnings);
+
+//		Calendar cal = Calendar.getInstance();
+//		Date now = new Date();
+//		//今月の初日を設定
+//		cal.setTime(now);
+//		//時間以降の情報を削除
+//		cal.clear(Calendar.MINUTE);
+//		cal.clear(Calendar.SECOND);
+//		cal.clear(Calendar.MILLISECOND);
+//		cal.set(Calendar.HOUR_OF_DAY, 0);
+//
+//		Calendar calMapDate = Calendar.getInstance();
+//		for(String date : earnings.keySet()) {
+//			calMapDate.set(Integer.parseInt(date.substring(0, 3)), Integer.parseInt(date.substring(4, 5)), Integer.parseInt(date.substring(6, 7)));
+//			if(cal.compareTo(calMapDate)!=0) {
+//
+//			}
+//			cal = calMapDate;
+//		}
+
+		return sortedEarnings;
 	}
 
 }

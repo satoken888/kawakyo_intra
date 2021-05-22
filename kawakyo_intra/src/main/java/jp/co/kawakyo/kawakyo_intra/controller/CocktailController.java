@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import jp.co.kawakyo.kawakyo_intra.model.entity.OrderEntity;
 import jp.co.kawakyo.kawakyo_intra.model.logic.EarningsCalculate;
+import jp.co.kawakyo.kawakyo_intra.utils.ConvertUtils;
 
 @Controller
 public class CocktailController {
@@ -30,30 +31,27 @@ public class CocktailController {
 
 		logger.info("[START] ORALCEに接続して受注データを取得します。");
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy年MM月dd日");
-
-		/*当日の売上金額を取得*/
-		Long todayEarnings = earningsCalculate.calculateTodayEarnings();
-
-		logger.info(simpleDateFormat.format(new Date()) + "の売上は" + todayEarnings + "です。");
+		Calendar cal = Calendar.getInstance();
+		Date now = cal.getTime();
 
 
-		/* 前日から１週間前までの売上データを取得 */
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(new Date());
-		calendar.add(Calendar.DATE,-1);
-		Map<String, Long> daysEarnings = earningsCalculate.getSomeDayEarnings(calendar.getTime(), 6);
+		Map<String,Long> monthEarnings = earningsCalculate.getSomeDayEarnings(ConvertUtils.covDate(now, true) ,ConvertUtils.covDate(now, false));
 
-		for(String key :daysEarnings.keySet()) {
-			logger.info(key + "の売上は" + daysEarnings.get(key) + "です。");
-		}
+		monthEarnings = earningsCalculate.addHolidayEarnings(cal.get(Calendar.YEAR),cal.get(Calendar.MONTH), monthEarnings);
 
-		daysEarnings.put(simpleDateFormat.format(new Date()), todayEarnings);
+		//昨年のデータを取得する
+		cal.set(Calendar.YEAR, cal.get(Calendar.YEAR)-1);
+		Date lastYearDate = cal.getTime();
 
+		Map<String, Long> lastYearMonthEarnings = earningsCalculate.getSomeDayEarnings(ConvertUtils.covDate(lastYearDate, true), ConvertUtils.covDate(lastYearDate, false));
+		lastYearMonthEarnings = earningsCalculate.addHolidayEarnings(cal.get(Calendar.YEAR),cal.get(Calendar.MONTH), lastYearMonthEarnings);
 		logger.info("[END  ] ORALCEに接続して受注データを取得します。");
 
 
 		model.addAttribute("message", "こんちは世界");
-		model.addAttribute("earnings", daysEarnings);
+		model.addAttribute("earnings", monthEarnings);
+		model.addAttribute("lastYearEarnings", lastYearMonthEarnings);
+//		model.addAttribute("earnings", daysEarnings);
 		return "index";
 	}
 
@@ -100,29 +98,34 @@ public class CocktailController {
 
 		logger.info("[START] ORALCEに接続して受注データを取得します。");
 		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
-
-		/*当日の売上金額を取得*/
-		Long todayEarnings = earningsCalculate.calculateTodayEarnings();
-
-		logger.info(simpleDateFormat.format(new Date()) + "の売上は" + todayEarnings + "です。");
+		Calendar cal = Calendar.getInstance();
+		Date now = cal.getTime();
 
 
-		/* 前日から１週間前までの売上データを取得 */
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(new Date());
-		calendar.add(Calendar.DATE,-1);
-		Map<String, Long> daysEarnings = earningsCalculate.getSomeDayEarnings(calendar.getTime(), 6);
+		Map<String,Long> monthEarnings = earningsCalculate.getSomeDayEarnings(ConvertUtils.covDate(now, true) ,ConvertUtils.covDate(now, false));
 
-		for(String key :daysEarnings.keySet()) {
-			logger.info(key + "の売上は" + daysEarnings.get(key) + "です。");
-		}
-
-		daysEarnings.put(simpleDateFormat.format(new Date()), todayEarnings);
+//		/*当日の売上金額を取得*/
+//		Long todayEarnings = earningsCalculate.calculateTodayEarnings();
+//
+//		logger.info(simpleDateFormat.format(new Date()) + "の売上は" + todayEarnings + "です。");
+//
+//
+//		/* 前日から１週間前までの売上データを取得 */
+//		Calendar calendar = Calendar.getInstance();
+//		calendar.setTime(new Date());
+//		calendar.add(Calendar.DATE,-1);
+//		Map<String, Long> daysEarnings = earningsCalculate.getSomeDayEarnings(calendar.getTime(), 6);
+//
+//		for(String key :daysEarnings.keySet()) {
+//			logger.info(key + "の売上は" + daysEarnings.get(key) + "です。");
+//		}
+//
+//		daysEarnings.put(simpleDateFormat.format(new Date()), todayEarnings);
 
 		logger.info("[END  ] ORALCEに接続して受注データを取得します。");
 
 		model.addAttribute("message", "こんにちは" + name + "さん");
-		model.addAttribute("earnings", daysEarnings);
+		model.addAttribute("earnings", monthEarnings);
 
 		return "test";
 	}
