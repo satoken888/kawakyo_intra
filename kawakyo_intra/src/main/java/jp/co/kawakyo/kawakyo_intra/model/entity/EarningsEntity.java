@@ -15,4 +15,5 @@ public class EarningsEntity {
 	private String datkb;
 	private String udndt;
 	private String sbaurikn;
+	private String sbauzkkn;
 }

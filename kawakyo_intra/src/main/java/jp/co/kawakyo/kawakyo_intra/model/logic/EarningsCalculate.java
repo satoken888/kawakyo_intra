@@ -132,4 +132,14 @@ public class EarningsCalculate {
 		return sortedEarnings;
 	}
 
+	public Long getTotalEarnings(Map<String, Long> earnings) {
+		Long totalEarnings = 0L;
+
+		for(Long oneDayEarnings : earnings.values()) {
+			totalEarnings += oneDayEarnings;
+		}
+
+		return totalEarnings;
+	}
+
 }

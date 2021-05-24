@@ -1,6 +1,5 @@
 package jp.co.kawakyo.kawakyo_intra.controller;
 
-import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
@@ -30,10 +29,11 @@ public class CocktailController {
 	public String helloWorld(Model model) {
 
 		logger.info("[START] ORALCEに接続して受注データを取得します。");
-		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy年MM月dd日");
 		Calendar cal = Calendar.getInstance();
 		Date now = cal.getTime();
-
+		String today = String.valueOf(cal.get(Calendar.YEAR))
+						+ String.valueOf(cal.get(Calendar.MONTH) + 1 < 10 ? "0" + (cal.get(Calendar.MONTH) + 1) : cal.get(Calendar.MONTH) + 1)
+						+ String.valueOf(cal.get(Calendar.DATE) < 10 ? "0" + cal.get(Calendar.DATE) : cal.get(Calendar.DATE));
 
 		Map<String,Long> monthEarnings = earningsCalculate.getSomeDayEarnings(ConvertUtils.covDate(now, true) ,ConvertUtils.covDate(now, false));
 
@@ -51,6 +51,9 @@ public class CocktailController {
 		model.addAttribute("message", "こんちは世界");
 		model.addAttribute("earnings", monthEarnings);
 		model.addAttribute("lastYearEarnings", lastYearMonthEarnings);
+		model.addAttribute("todayEarnings", monthEarnings.get(today));
+		model.addAttribute("totalEarnings", earningsCalculate.getTotalEarnings(monthEarnings));
+		model.addAttribute("goalEarnings", 50110000);
 //		model.addAttribute("earnings", daysEarnings);
 		return "index";
 	}
@@ -97,7 +100,6 @@ public class CocktailController {
 	public String showTestPagePOST(@RequestParam("name") String name, Model model) {
 
 		logger.info("[START] ORALCEに接続して受注データを取得します。");
-		SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
 		Calendar cal = Calendar.getInstance();
 		Date now = cal.getTime();
 

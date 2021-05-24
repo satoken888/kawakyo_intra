@@ -98,3 +98,14 @@ body {
   border-color: transparent;
   box-shadow: 0 0 0 3px rgba(255, 255, 255, .25);
 }
+
+div.table-area {
+	margin-top:30px;
+}
+
+#summaryEarningsTable {
+	font-size:30px;
+}
+#summaryEarningsTable tbody tr {
+ font-size:48px;
+}
