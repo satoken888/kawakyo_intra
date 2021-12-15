@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.kintone.client.KintoneClient;
 import com.kintone.client.KintoneClientBuilder;
+import com.kintone.client.model.record.DropDownFieldValue;
+import com.kintone.client.model.record.NumberFieldValue;
+import com.kintone.client.model.record.RadioButtonFieldValue;
 import com.kintone.client.model.record.Record;
 
 import jp.co.kawakyo.kawakyo_intra.model.entity.OrderEntity;
@@ -37,29 +41,59 @@ public class CocktailController {
 
 		logger.info("[START] ORALCEに接続して受注データを取得します。");
 		Calendar cal = Calendar.getInstance();
+		Calendar lastYearCal = Calendar.getInstance();
 		Date now = cal.getTime();
 		String today = String.valueOf(cal.get(Calendar.YEAR))
 						+ String.valueOf(cal.get(Calendar.MONTH) + 1 < 10 ? "0" + (cal.get(Calendar.MONTH) + 1) : cal.get(Calendar.MONTH) + 1)
 						+ String.valueOf(cal.get(Calendar.DATE) < 10 ? "0" + cal.get(Calendar.DATE) : cal.get(Calendar.DATE));
 		//kintone検索用に日付文字列を「yyyy年mm月」で作成
 		String kintoneForecastDate = String.valueOf(cal.get(Calendar.YEAR)) + "年" + String.valueOf(cal.get(Calendar.MONTH)+1) + "月";
-
+		
 		Map<String,Long> monthEarnings = earningsCalculate.getSomeDayEarnings(ConvertUtils.covDate(now, true) ,ConvertUtils.covDate(now, false));
 
 		monthEarnings = earningsCalculate.addHolidayEarnings(cal.get(Calendar.YEAR),cal.get(Calendar.MONTH), monthEarnings);
 
+		//当日までの累計売上を産出
+		Long cumulativeSales = earningsCalculate.getTotalEarnings(monthEarnings);
+		
 		//昨年のデータを取得する
-		cal.set(Calendar.YEAR, cal.get(Calendar.YEAR)-1);
-		Date lastYearDate = cal.getTime();
+		lastYearCal.set(Calendar.YEAR, cal.get(Calendar.YEAR)-1);
+		Date lastYearDate = lastYearCal.getTime();
 
 		Map<String, Long> lastYearMonthEarnings = earningsCalculate.getSomeDayEarnings(ConvertUtils.covDate(lastYearDate, true), ConvertUtils.covDate(lastYearDate, false));
-		lastYearMonthEarnings = earningsCalculate.addHolidayEarnings(cal.get(Calendar.YEAR),cal.get(Calendar.MONTH), lastYearMonthEarnings);
+		lastYearMonthEarnings = earningsCalculate.addHolidayEarnings(lastYearCal.get(Calendar.YEAR),lastYearCal.get(Calendar.MONTH), lastYearMonthEarnings);
 		logger.info("[END  ] ORALCEに接続して受注データを取得します。");
 
+		//kintoneとのコネクション作成
 		logger.info("kintone初期化処理 開始");
 		KintoneClient client = KintoneClientBuilder.create("https://kawakyo.cybozu.com").authByPassword("ke.sato", "Kyoumoga8").build();
 		logger.info("kintone初期化処理 終了");
 		
+		//20時～20時10分の実施の際は当日累計売上をkintoneにupする。
+		//20211215現在、表の更新間隔は10分間のため10分までの間にする。こうすることで1日あたり1回のみの発生に抑える。
+		if(cal.get(Calendar.HOUR_OF_DAY) == 20 && cal.get(Calendar.MINUTE) <= 10) {
+			
+			//kintoneに接続して、当月の累計実績レコードがあるか確認
+			List<Record> achievementRecords = client.record().getRecords(49L, "month in (\"" + kintoneForecastDate + "\") and forecast_div in (\"実績\")");
+			//あれば、更新
+			if(!CollectionUtils.isEmpty(achievementRecords)) {
+				Record achievementRecordOrg = achievementRecords.get(0);
+				Record achievementRecord = Record.newFrom(achievementRecordOrg);
+				Long recordId = achievementRecordOrg.getId();
+				achievementRecord.putField("数値", new NumberFieldValue(cumulativeSales-1));
+				client.record().updateRecord(49L, recordId, achievementRecord);
+			} else {
+			//なければ、作成を行う
+				Record achievementRecord = new Record();
+				achievementRecord.putField("department", new DropDownFieldValue("本社"));
+				achievementRecord.putField("forecast_div", new RadioButtonFieldValue("実績"));
+				achievementRecord.putField("month", new DropDownFieldValue(kintoneForecastDate));
+				achievementRecord.putField("数値", new NumberFieldValue(cumulativeSales));
+				client.record().addRecord(49L, achievementRecord);
+			}
+		}
+		
+		//kintoneの売上予算表から売上予算の取得
 		logger.info("kintone売上情報取得 開始");
 		List<Record> records =  client.record().getRecords(49L,"month in (\"" + kintoneForecastDate + "\") and forecast_div in (\"予算\")");
 		logger.info("kintone売上情報取得 終了");
@@ -84,7 +118,7 @@ public class CocktailController {
 		model.addAttribute("earnings", monthEarnings);
 		model.addAttribute("lastYearEarnings", lastYearMonthEarnings);
 		model.addAttribute("todayEarnings", monthEarnings.get(today));
-		model.addAttribute("totalEarnings", earningsCalculate.getTotalEarnings(monthEarnings));
+		model.addAttribute("totalEarnings", cumulativeSales);
 		model.addAttribute("goalEarnings", forecast_earnings);
 //		model.addAttribute("earnings", daysEarnings);
 		return "index";
