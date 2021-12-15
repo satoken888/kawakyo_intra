@@ -1,7 +1,10 @@
 package jp.co.kawakyo.kawakyo_intra.controller;
 
+import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -12,6 +15,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import com.kintone.client.KintoneClient;
+import com.kintone.client.KintoneClientBuilder;
+import com.kintone.client.model.record.Record;
 
 import jp.co.kawakyo.kawakyo_intra.model.entity.OrderEntity;
 import jp.co.kawakyo.kawakyo_intra.model.logic.EarningsCalculate;
@@ -34,6 +41,8 @@ public class CocktailController {
 		String today = String.valueOf(cal.get(Calendar.YEAR))
 						+ String.valueOf(cal.get(Calendar.MONTH) + 1 < 10 ? "0" + (cal.get(Calendar.MONTH) + 1) : cal.get(Calendar.MONTH) + 1)
 						+ String.valueOf(cal.get(Calendar.DATE) < 10 ? "0" + cal.get(Calendar.DATE) : cal.get(Calendar.DATE));
+		//kintone検索用に日付文字列を「yyyy年mm月」で作成
+		String kintoneForecastDate = String.valueOf(cal.get(Calendar.YEAR)) + "年" + String.valueOf(cal.get(Calendar.MONTH)+1) + "月";
 
 		Map<String,Long> monthEarnings = earningsCalculate.getSomeDayEarnings(ConvertUtils.covDate(now, true) ,ConvertUtils.covDate(now, false));
 
@@ -47,13 +56,36 @@ public class CocktailController {
 		lastYearMonthEarnings = earningsCalculate.addHolidayEarnings(cal.get(Calendar.YEAR),cal.get(Calendar.MONTH), lastYearMonthEarnings);
 		logger.info("[END  ] ORALCEに接続して受注データを取得します。");
 
+		logger.info("kintone初期化処理 開始");
+		KintoneClient client = KintoneClientBuilder.create("https://kawakyo.cybozu.com").authByPassword("ke.sato", "Kyoumoga8").build();
+		logger.info("kintone初期化処理 終了");
+		
+		logger.info("kintone売上情報取得 開始");
+		List<Record> records =  client.record().getRecords(49L,"month in (\"" + kintoneForecastDate + "\") and forecast_div in (\"予算\")");
+		logger.info("kintone売上情報取得 終了");
+		
+		logger.info("===取得結果===");
+		BigDecimal forecast_earnings = new BigDecimal(0);
+		for(Record record : records) {
+			logger.info("対象年月：" + record.getDropDownFieldValue("month"));
+			logger.info("売上予算：" + record.getNumberFieldValue("数値"));
+			logger.info("==============");
+			forecast_earnings = record.getNumberFieldValue("数値");
+		}
+		
+		try {
+			client.close();
+		} catch (IOException e) {
+			// TODO 自動生成された catch ブロック
+			e.printStackTrace();
+		}
 
 		model.addAttribute("message", "こんちは世界");
 		model.addAttribute("earnings", monthEarnings);
 		model.addAttribute("lastYearEarnings", lastYearMonthEarnings);
 		model.addAttribute("todayEarnings", monthEarnings.get(today));
 		model.addAttribute("totalEarnings", earningsCalculate.getTotalEarnings(monthEarnings));
-		model.addAttribute("goalEarnings", 50110000);
+		model.addAttribute("goalEarnings", forecast_earnings);
 //		model.addAttribute("earnings", daysEarnings);
 		return "index";
 	}
