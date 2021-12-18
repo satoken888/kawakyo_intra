@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8" />
+<title>河京イントラネット | 本日の受注取引先一覧</title>
+<link rel="stylesheet"
+	th:href="@{/webjars/bootstrap/4.3.1/css/bootstrap.min.css}" />
+<link th:href="@{/css/dashboard.css}" rel="stylesheet">
+</head>
+<body>
+	<nav
+		class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
+		<a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/">河京　イントラネット</a> <input class="form-control form-control-dark w-100" type="text"
+			placeholder="Search" aria-label="Search">
+		<ul class="navbar-nav px-3">
+			<li class="nav-item text-nowrap"><a class="nav-link" href="#">Sign
+					out</a></li>
+		</ul>
+	</nav>
+
+	<div class="container-fluid">
+		<div class="row">
+			<nav class="col-md-2 d-none d-md-block bg-light sidebar">
+				<div class="sidebar-sticky">
+					<ul class="nav flex-column">
+						<li class="nav-item"><a class="nav-link" href="/">
+								<span data-feather="home"></span> Dashboard 
+						</a></li>
+						<li class="nav-item"><a class="nav-link active" href="/todayClient"> <span
+								data-feather="shopping-cart"></span> Today's Client<span
+								class="sr-only">(current)</span>
+						</a></li>
+						<li class="nav-item"><a class="nav-link" href="#"> <span
+								data-feather="file"></span> Coming soon...
+						</a></li>
+						<li class="nav-item"><a class="nav-link" href="#"> <span
+								data-feather="users"></span> Coming soon...
+						</a></li>
+						<li class="nav-item"><a class="nav-link" href="#"> <span
+								data-feather="bar-chart-2"></span> Coming soon...
+						</a></li>
+						<li class="nav-item"><a class="nav-link" href="#"> <span
+								data-feather="layers"></span> Coming soon...
+						</a></li>
+					</ul>
+
+					<h6
+						class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+						<span>Saved reports</span> <a
+							class="d-flex align-items-center text-muted" href="#"> <span
+							data-feather="plus-circle"></span>
+						</a>
+					</h6>
+					<ul class="nav flex-column mb-2">
+						<li class="nav-item"><a class="nav-link" href="#"> <span
+								data-feather="file-text"></span> Coming soon...
+						</a></li>
+						<li class="nav-item"><a class="nav-link" href="#"> <span
+								data-feather="file-text"></span> Coming soon...
+						</a></li>
+						<li class="nav-item"><a class="nav-link" href="#"> <span
+								data-feather="file-text"></span> Coming soon...
+						</a></li>
+						<li class="nav-item"><a class="nav-link" href="#"> <span
+								data-feather="file-text"></span> Coming soon...
+						</a></li>
+					</ul>
+				</div>
+			</nav>
+
+			<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+				<!-- コンテンツエリア  -->
+				<h1 style="margin-top:50px;">■本日の受注取引先様一覧</h1>
+				
+				<table id="todayClientInfoTable" class="table table-bordered table-condensed">
+					<thead>
+						<tr>
+							<th>得意先名</th>
+							<th>出荷予定日</th>
+							<th>受注金額</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="orderCustomerInfo : ${orderCustomerInfoList}" th:object="${orderCustomerInfo}">
+							<td class="text-center" th:text="*{tokrn}"></td>
+							<td class="text-center" th:text="|${#strings.substring(orderCustomerInfo.jucsyydt,0,4)}年${#strings.substring(orderCustomerInfo.jucsyydt,4,6)}月${#strings.substring(orderCustomerInfo.jucsyydt,6,8)}日|"></td>
+							<td class="text-center" th:text="${#numbers.formatInteger(orderCustomerInfo.sbauodkn,3,'COMMA')}"></td>
+						</tr>
+					</tbody>
+				</table>
+			</main>
+		</div>
+	</div>
+	<script th:src="@{/webjars/jquery/3.3.1/jquery.min.js}"></script>
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.9.0/feather.min.js"></script>
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.bundle.js"></script>
+	<script th:src="@{/webjars/bootstrap/4.3.1/js/bootstrap.min.js}"></script>
+	<script th:inline="javascript" type="text/javascript">
+	/*<![CDATA[*/
+		feather.replace();
+		
+		setTimeout(function(){
+			window.location.href="/";
+		},300000);
+		/*]]>*/
+	</script>
+</body>
+</html>

@@ -109,3 +109,12 @@ div.table-area {
 #summaryEarningsTable tbody tr {
  font-size:48px;
 }
+
+#todayClientInfoTable {
+	margin-top : 20px;
+	font-size : 3em;
+}
+
+#todayClientInfoTable thead {
+	background : #ffff92;
+}

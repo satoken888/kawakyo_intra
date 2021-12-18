@@ -33,4 +33,16 @@ public class ConvertUtils {
 
         return cal.getTime();
     }
+	
+	/**
+	 * YYYYMMDD形式の文字列を取得する
+	 * @param cal 変換したい日付情報をもったCalendarクラスパラメータ
+	 * @return YYYYMMDD形式の文字列
+	 */
+	public static String getDateStrYYYYMMDD(Calendar cal) {
+		String rtnStr = String.valueOf(cal.get(Calendar.YEAR))
+				+ String.valueOf(cal.get(Calendar.MONTH) + 1 < 10 ? "0" + (cal.get(Calendar.MONTH) + 1) : cal.get(Calendar.MONTH) + 1)
+				+ String.valueOf(cal.get(Calendar.DATE) < 10 ? "0" + cal.get(Calendar.DATE) : cal.get(Calendar.DATE));
+		return rtnStr;
+	}
 }

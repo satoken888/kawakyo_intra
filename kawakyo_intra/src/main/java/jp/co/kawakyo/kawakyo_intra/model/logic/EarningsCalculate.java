@@ -13,17 +13,17 @@ import java.util.TreeMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import jp.co.kawakyo.kawakyo_intra.repository.EarningsRepository;
-import jp.co.kawakyo.kawakyo_intra.repository.OrderRepository;
+import jp.co.kawakyo.kawakyo_intra.repository.UDNTHARepository;
+import jp.co.kawakyo.kawakyo_intra.repository.JDNTHARepository;
 import jp.co.kawakyo.kawakyo_intra.utils.ConvertUtils;
 
 @Service
 public class EarningsCalculate {
 
 	@Autowired
-	OrderRepository orderRepository;
+	JDNTHARepository jdnthaRepository;
 	@Autowired
-	EarningsRepository earningsRepository;
+	UDNTHARepository udnthaRepository;
 
 	/**
 	 * 本日の売上金額取得
@@ -40,7 +40,7 @@ public class EarningsCalculate {
 	 */
 	public Long calculateOneDayEarnings(Date date) {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
-		Long earnings = orderRepository.findOneDaySbauodkn(dateFormat.format(date));
+		Long earnings = jdnthaRepository.findOneDaySbauodkn(dateFormat.format(date));
 		return (Objects.isNull(earnings)) ? 0L : earnings;
 	}
 
@@ -69,7 +69,7 @@ public class EarningsCalculate {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
 
 		/* startDateからendDateまでの売上情報をDBから取得 */
-		List<Object> earningsData = earningsRepository.findDaysEarnings(dateFormat.format(startDate), dateFormat.format(endDate));
+		List<Object> earningsData = udnthaRepository.findDaysEarnings(dateFormat.format(startDate), dateFormat.format(endDate));
 
 		Iterator<Object> itr = earningsData.iterator();
 		while(itr.hasNext()) {
@@ -109,25 +109,6 @@ public class EarningsCalculate {
 
 
 		Map<String, Long> sortedEarnings = new TreeMap<String, Long>(earnings);
-
-//		Calendar cal = Calendar.getInstance();
-//		Date now = new Date();
-//		//今月の初日を設定
-//		cal.setTime(now);
-//		//時間以降の情報を削除
-//		cal.clear(Calendar.MINUTE);
-//		cal.clear(Calendar.SECOND);
-//		cal.clear(Calendar.MILLISECOND);
-//		cal.set(Calendar.HOUR_OF_DAY, 0);
-//
-//		Calendar calMapDate = Calendar.getInstance();
-//		for(String date : earnings.keySet()) {
-//			calMapDate.set(Integer.parseInt(date.substring(0, 3)), Integer.parseInt(date.substring(4, 5)), Integer.parseInt(date.substring(6, 7)));
-//			if(cal.compareTo(calMapDate)!=0) {
-//
-//			}
-//			cal = calMapDate;
-//		}
 
 		return sortedEarnings;
 	}

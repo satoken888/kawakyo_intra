@@ -24,9 +24,10 @@ import com.kintone.client.model.record.NumberFieldValue;
 import com.kintone.client.model.record.RadioButtonFieldValue;
 import com.kintone.client.model.record.Record;
 
-import jp.co.kawakyo.kawakyo_intra.model.entity.OrderEntity;
+import jp.co.kawakyo.kawakyo_intra.model.entity.JDNTHAEntity;
 import jp.co.kawakyo.kawakyo_intra.model.logic.EarningsCalculate;
 import jp.co.kawakyo.kawakyo_intra.utils.ConvertUtils;
+import jp.co.kawakyo.kawakyo_intra.utils.KintoneConstants;
 
 @Controller
 public class CocktailController {
@@ -37,90 +38,82 @@ public class CocktailController {
 	Logger logger = LoggerFactory.getLogger(CocktailController.class);
 
 	@RequestMapping(value = "/", method = RequestMethod.GET)
-	public String helloWorld(Model model) {
+	public String showIndex(Model model) {
 
-		logger.info("[START] ORALCEに接続して受注データを取得します。");
+		logger.debug("[START] ORALCEに接続して受注データを取得します。");
 		Calendar cal = Calendar.getInstance();
 		Calendar lastYearCal = Calendar.getInstance();
 		Date now = cal.getTime();
-		String today = String.valueOf(cal.get(Calendar.YEAR))
-						+ String.valueOf(cal.get(Calendar.MONTH) + 1 < 10 ? "0" + (cal.get(Calendar.MONTH) + 1) : cal.get(Calendar.MONTH) + 1)
-						+ String.valueOf(cal.get(Calendar.DATE) < 10 ? "0" + cal.get(Calendar.DATE) : cal.get(Calendar.DATE));
+		String today = ConvertUtils.getDateStrYYYYMMDD(cal);
+
 		//kintone検索用に日付文字列を「yyyy年mm月」で作成
 		String kintoneForecastDate = String.valueOf(cal.get(Calendar.YEAR)) + "年" + String.valueOf(cal.get(Calendar.MONTH)+1) + "月";
-		
+
+		//今月の日別売上金額の取得
 		Map<String,Long> monthEarnings = earningsCalculate.getSomeDayEarnings(ConvertUtils.covDate(now, true) ,ConvertUtils.covDate(now, false));
 
+		//休日に売上金0の情報を追加する。
 		monthEarnings = earningsCalculate.addHolidayEarnings(cal.get(Calendar.YEAR),cal.get(Calendar.MONTH), monthEarnings);
 
 		//当日までの累計売上を産出
 		Long cumulativeSales = earningsCalculate.getTotalEarnings(monthEarnings);
-		
-		//昨年のデータを取得する
+
+		//昨年の同月売上データを取得する
 		lastYearCal.set(Calendar.YEAR, cal.get(Calendar.YEAR)-1);
 		Date lastYearDate = lastYearCal.getTime();
-
 		Map<String, Long> lastYearMonthEarnings = earningsCalculate.getSomeDayEarnings(ConvertUtils.covDate(lastYearDate, true), ConvertUtils.covDate(lastYearDate, false));
 		lastYearMonthEarnings = earningsCalculate.addHolidayEarnings(lastYearCal.get(Calendar.YEAR),lastYearCal.get(Calendar.MONTH), lastYearMonthEarnings);
-		logger.info("[END  ] ORALCEに接続して受注データを取得します。");
+		logger.debug("[END  ] ORALCEに接続して受注データを取得します。");
 
 		//kintoneとのコネクション作成
-		logger.info("kintone初期化処理 開始");
-		KintoneClient client = KintoneClientBuilder.create("https://kawakyo.cybozu.com").authByPassword("ke.sato", "Kyoumoga8").build();
-		logger.info("kintone初期化処理 終了");
-		
-		//20時～20時10分の実施の際は当日累計売上をkintoneにupする。
-		//20211215現在、表の更新間隔は10分間のため10分までの間にする。こうすることで1日あたり1回のみの発生に抑える。
-		if(cal.get(Calendar.HOUR_OF_DAY) == 20 && cal.get(Calendar.MINUTE) <= 10) {
-			
-			//kintoneに接続して、当月の累計実績レコードがあるか確認
-			List<Record> achievementRecords = client.record().getRecords(49L, "month in (\"" + kintoneForecastDate + "\") and forecast_div in (\"実績\")");
-			//あれば、更新
-			if(!CollectionUtils.isEmpty(achievementRecords)) {
-				Record achievementRecordOrg = achievementRecords.get(0);
-				Record achievementRecord = Record.newFrom(achievementRecordOrg);
-				Long recordId = achievementRecordOrg.getId();
-				achievementRecord.putField("数値", new NumberFieldValue(cumulativeSales-1));
-				client.record().updateRecord(49L, recordId, achievementRecord);
-			} else {
-			//なければ、作成を行う
-				Record achievementRecord = new Record();
-				achievementRecord.putField("department", new DropDownFieldValue("本社"));
-				achievementRecord.putField("forecast_div", new RadioButtonFieldValue("実績"));
-				achievementRecord.putField("month", new DropDownFieldValue(kintoneForecastDate));
-				achievementRecord.putField("数値", new NumberFieldValue(cumulativeSales));
-				client.record().addRecord(49L, achievementRecord);
+		logger.debug("kintone初期化処理 開始");
+		try(KintoneClient client = KintoneClientBuilder.create(KintoneConstants.KINTONE_URL).authByApiToken(KintoneConstants.API_TOKEN).build()) {
+
+			logger.debug("kintone初期化処理 終了");
+
+			//20時～20時10分の実施の際は当日累計売上をkintoneにupする。
+			//20211218現在、5分で画面遷移売上ビューと得意先ビューの変更が行われるようになっているため、
+			//10分までの間にindex.htmlを表示いた場合は実行するようにする。
+			if(cal.get(Calendar.HOUR_OF_DAY) == 20 && cal.get(Calendar.MINUTE) <= 10) {
+
+				//kintoneに接続して、当月の累計実績レコードを取得
+				List<Record> achievementRecords = client.record().getRecords(KintoneConstants.KINTONE_SALESBUDGET_APP_CODE, "month in (\"" + kintoneForecastDate + "\") and forecast_div in (\"実績\")");
+
+				//kintoneの売上予算表に実績数字があるかないかで本日売上の新規登録、更新のどちらかを行う。
+				//すでに同月の実績数字がある場合、更新。そうでない場合はレコードの新規作成
+				createOrUpdateAchievementRecord(client, achievementRecords, kintoneForecastDate, cumulativeSales);
 			}
-		}
-		
-		//kintoneの売上予算表から売上予算の取得
-		logger.info("kintone売上情報取得 開始");
-		List<Record> records =  client.record().getRecords(49L,"month in (\"" + kintoneForecastDate + "\") and forecast_div in (\"予算\")");
-		logger.info("kintone売上情報取得 終了");
-		
-		logger.info("===取得結果===");
-		BigDecimal forecast_earnings = new BigDecimal(0);
-		for(Record record : records) {
-			logger.info("対象年月：" + record.getDropDownFieldValue("month"));
-			logger.info("売上予算：" + record.getNumberFieldValue("数値"));
-			logger.info("==============");
-			forecast_earnings = record.getNumberFieldValue("数値");
-		}
-		
-		try {
-			client.close();
+
+			//kintoneの売上予算表から売上予算の取得
+			logger.debug("kintone売上情報取得 開始");
+			List<Record> records =  client.record().getRecords(KintoneConstants.KINTONE_SALESBUDGET_APP_CODE,"month in (\"" + kintoneForecastDate + "\") and forecast_div in (\"予算\")");
+			logger.debug("kintone売上情報取得 終了");
+
+			logger.debug("===取得結果===");
+			BigDecimal forecast_earnings = new BigDecimal(0);
+			for(Record record : records) {
+				logger.debug("対象年月：" + record.getDropDownFieldValue("month"));
+				logger.debug("売上予算：" + record.getNumberFieldValue(KintoneConstants.KINTONE_SALESBUDGET_FIELD_CODE));
+				logger.debug("==============");
+				//売上予算を格納
+				forecast_earnings = record.getNumberFieldValue(KintoneConstants.KINTONE_SALESBUDGET_FIELD_CODE);
+			}
+
+			//view用にmodelに格納する
+			//現時点までの今月の日別売上金額
+			model.addAttribute("earnings", monthEarnings);
+			//昨年の売上合計金額
+			model.addAttribute("lastYearEarnings", lastYearMonthEarnings);
+			//本日の売上合計金額
+			model.addAttribute("todayEarnings", monthEarnings.get(today));
+			//今月の累計売上金額
+			model.addAttribute("totalEarnings", cumulativeSales);
+			//今月の売上予算
+			model.addAttribute("goalEarnings", forecast_earnings);
 		} catch (IOException e) {
 			// TODO 自動生成された catch ブロック
 			e.printStackTrace();
 		}
-
-		model.addAttribute("message", "こんちは世界");
-		model.addAttribute("earnings", monthEarnings);
-		model.addAttribute("lastYearEarnings", lastYearMonthEarnings);
-		model.addAttribute("todayEarnings", monthEarnings.get(today));
-		model.addAttribute("totalEarnings", cumulativeSales);
-		model.addAttribute("goalEarnings", forecast_earnings);
-//		model.addAttribute("earnings", daysEarnings);
 		return "index";
 	}
 
@@ -128,30 +121,30 @@ public class CocktailController {
 	public String nameToMessage(@RequestParam("name") String name, Model model) {
 
 		logger.info("[START] ORALCEに接続して受注データを取得します。");
-		OrderEntity order = new OrderEntity();
+		JDNTHAEntity order = new JDNTHAEntity();
 		order.setDatkb("1");
 		order.setJucsyydt("20201216");
 
-//		Example<OrderEntity> example = Example.of(order);
-//		Page<OrderEntity> emps = orderRepository.findAll(new PageRequest(0, 10, Direction.DESC,"datno"));
-//		Page<OrderEntity> emps2 = orderRepository.findAll(example, new PageRequest(0, 20, Direction.DESC,"datno"));
+		//		Example<OrderEntity> example = Example.of(order);
+		//		Page<OrderEntity> emps = orderRepository.findAll(new PageRequest(0, 10, Direction.DESC,"datno"));
+		//		Page<OrderEntity> emps2 = orderRepository.findAll(example, new PageRequest(0, 20, Direction.DESC,"datno"));
 
-//		String rtnMessage = "";
-//		String record;
-//		for (OrderEntity emp : emps2) {
-//			record = emp.getJdnno() + "の出荷予定日は" + emp.getJucsyydt() + "です。";
-//			logger.info(record);
-//			rtnMessage += record + "\r\n";
-//		}
+		//		String rtnMessage = "";
+		//		String record;
+		//		for (OrderEntity emp : emps2) {
+		//			record = emp.getJdnno() + "の出荷予定日は" + emp.getJucsyydt() + "です。";
+		//			logger.info(record);
+		//			rtnMessage += record + "\r\n";
+		//		}
 
 		/* test start */
-//		String date = "20201217";
-//		Long earnings = earningsRepository.findOneDayEarnings(date);
-//		logger.info(date + "の売上は" + earnings + "です。");
+		//		String date = "20201217";
+		//		Long earnings = earningsRepository.findOneDayEarnings(date);
+		//		logger.info(date + "の売上は" + earnings + "です。");
 		logger.info("[END  ] ORALCEに接続して受注データを取得します。");
 
 		model.addAttribute("message", "こんにちは" + name + "さん");
-//		model.addAttribute("search",rtnMessage);
+		//		model.addAttribute("search",rtnMessage);
 
 		return "index";
 	}
@@ -172,23 +165,23 @@ public class CocktailController {
 
 		Map<String,Long> monthEarnings = earningsCalculate.getSomeDayEarnings(ConvertUtils.covDate(now, true) ,ConvertUtils.covDate(now, false));
 
-//		/*当日の売上金額を取得*/
-//		Long todayEarnings = earningsCalculate.calculateTodayEarnings();
-//
-//		logger.info(simpleDateFormat.format(new Date()) + "の売上は" + todayEarnings + "です。");
-//
-//
-//		/* 前日から１週間前までの売上データを取得 */
-//		Calendar calendar = Calendar.getInstance();
-//		calendar.setTime(new Date());
-//		calendar.add(Calendar.DATE,-1);
-//		Map<String, Long> daysEarnings = earningsCalculate.getSomeDayEarnings(calendar.getTime(), 6);
-//
-//		for(String key :daysEarnings.keySet()) {
-//			logger.info(key + "の売上は" + daysEarnings.get(key) + "です。");
-//		}
-//
-//		daysEarnings.put(simpleDateFormat.format(new Date()), todayEarnings);
+		//		/*当日の売上金額を取得*/
+		//		Long todayEarnings = earningsCalculate.calculateTodayEarnings();
+		//
+		//		logger.info(simpleDateFormat.format(new Date()) + "の売上は" + todayEarnings + "です。");
+		//
+		//
+		//		/* 前日から１週間前までの売上データを取得 */
+		//		Calendar calendar = Calendar.getInstance();
+		//		calendar.setTime(new Date());
+		//		calendar.add(Calendar.DATE,-1);
+		//		Map<String, Long> daysEarnings = earningsCalculate.getSomeDayEarnings(calendar.getTime(), 6);
+		//
+		//		for(String key :daysEarnings.keySet()) {
+		//			logger.info(key + "の売上は" + daysEarnings.get(key) + "です。");
+		//		}
+		//
+		//		daysEarnings.put(simpleDateFormat.format(new Date()), todayEarnings);
 
 		logger.info("[END  ] ORALCEに接続して受注データを取得します。");
 
@@ -196,6 +189,26 @@ public class CocktailController {
 		model.addAttribute("earnings", monthEarnings);
 
 		return "test";
+	}
+
+	private void createOrUpdateAchievementRecord(KintoneClient client, List<Record> achievementRecords, String thisMonthStr,Long cumulativeSales) {
+
+		//あれば、更新
+		if(!CollectionUtils.isEmpty(achievementRecords)) {
+			Record achievementRecordOrg = achievementRecords.get(0);
+			Record achievementRecord = Record.newFrom(achievementRecordOrg);
+			Long recordId = achievementRecordOrg.getId();
+			achievementRecord.putField(KintoneConstants.KINTONE_SALESBUDGET_FIELD_CODE, new NumberFieldValue(cumulativeSales));
+			client.record().updateRecord(KintoneConstants.KINTONE_SALESBUDGET_APP_CODE, recordId, achievementRecord);
+		} else {
+			//なければ、作成を行う
+			Record achievementRecord = new Record();
+			achievementRecord.putField("department", new DropDownFieldValue(KintoneConstants.DEPARTMENT_MAINOFFICE));
+			achievementRecord.putField("forecast_div", new RadioButtonFieldValue(KintoneConstants.FORECAST_DIV_ACHIEVEMENT));
+			achievementRecord.putField("month", new DropDownFieldValue(thisMonthStr));
+			achievementRecord.putField(KintoneConstants.KINTONE_SALESBUDGET_FIELD_CODE, new NumberFieldValue(cumulativeSales));
+			client.record().addRecord(KintoneConstants.KINTONE_SALESBUDGET_APP_CODE, achievementRecord);
+		}
 	}
 
 }

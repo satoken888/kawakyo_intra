@@ -7,15 +7,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import jp.co.kawakyo.kawakyo_intra.model.entity.EarningsEntity;
+import jp.co.kawakyo.kawakyo_intra.model.entity.UDNTHAEntity;
 
 @Repository
-public interface EarningsRepository extends JpaRepository<EarningsEntity, String> {
+public interface UDNTHARepository extends JpaRepository<UDNTHAEntity, String> {
 
-	@Query("select sum(u.sbaurikn - u.sbauzkkn) from EarningsEntity u where u.udndt = :date and u.datkb = '1' group by u.udndt")
+	@Query("select sum(u.sbaurikn - u.sbauzkkn) from UDNTHAEntity u where u.udndt = :date and u.datkb = '1' group by u.udndt")
 	Long findOneDayEarnings(@Param("date") String date);
 
-	@Query("select u.udndt,sum(u.sbaurikn - u.sbauzkkn) from EarningsEntity u where u.udndt >= :startDate and u.udndt <= :endDate and u.datkb = '1' group by u.udndt")
+	@Query("select u.udndt,sum(u.sbaurikn - u.sbauzkkn) from UDNTHAEntity u where u.udndt >= :startDate and u.udndt <= :endDate and u.datkb = '1' group by u.udndt")
 	List<Object> findDaysEarnings(@Param("startDate") String startDate,@Param("endDate") String endDate);
 
 }
