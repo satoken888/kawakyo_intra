@@ -13,9 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import com.kintone.client.KintoneClient;
 import com.kintone.client.KintoneClientBuilder;
@@ -24,10 +22,10 @@ import com.kintone.client.model.record.NumberFieldValue;
 import com.kintone.client.model.record.RadioButtonFieldValue;
 import com.kintone.client.model.record.Record;
 
-import jp.co.kawakyo.kawakyo_intra.model.entity.JDNTHAEntity;
 import jp.co.kawakyo.kawakyo_intra.model.logic.EarningsCalculate;
 import jp.co.kawakyo.kawakyo_intra.utils.ConvertUtils;
 import jp.co.kawakyo.kawakyo_intra.utils.KintoneConstants;
+import jp.co.kawakyo.kawakyo_intra.utils.LineNotify;
 
 @Controller
 public class CocktailController {
@@ -37,7 +35,7 @@ public class CocktailController {
 
 	Logger logger = LoggerFactory.getLogger(CocktailController.class);
 
-	@RequestMapping(value = "/", method = RequestMethod.GET)
+	@GetMapping(value = "/")
 	public String showIndex(Model model) {
 
 		logger.debug("[START] ORALCEに接続して受注データを取得します。");
@@ -117,80 +115,14 @@ public class CocktailController {
 		return "index";
 	}
 
-	@RequestMapping(value = "/", method = RequestMethod.POST)
-	public String nameToMessage(@RequestParam("name") String name, Model model) {
-
-		logger.info("[START] ORALCEに接続して受注データを取得します。");
-		JDNTHAEntity order = new JDNTHAEntity();
-		order.setDatkb("1");
-		order.setJucsyydt("20201216");
-
-		//		Example<OrderEntity> example = Example.of(order);
-		//		Page<OrderEntity> emps = orderRepository.findAll(new PageRequest(0, 10, Direction.DESC,"datno"));
-		//		Page<OrderEntity> emps2 = orderRepository.findAll(example, new PageRequest(0, 20, Direction.DESC,"datno"));
-
-		//		String rtnMessage = "";
-		//		String record;
-		//		for (OrderEntity emp : emps2) {
-		//			record = emp.getJdnno() + "の出荷予定日は" + emp.getJucsyydt() + "です。";
-		//			logger.info(record);
-		//			rtnMessage += record + "\r\n";
-		//		}
-
-		/* test start */
-		//		String date = "20201217";
-		//		Long earnings = earningsRepository.findOneDayEarnings(date);
-		//		logger.info(date + "の売上は" + earnings + "です。");
-		logger.info("[END  ] ORALCEに接続して受注データを取得します。");
-
-		model.addAttribute("message", "こんにちは" + name + "さん");
-		//		model.addAttribute("search",rtnMessage);
-
-		return "index";
-	}
-
-	@RequestMapping(value="/test", method = RequestMethod.GET)
-	public String showTestPage(Model model) {
-		model.addAttribute("message", "こんちは世界 test");
-		return "test";
-	}
-
-	@RequestMapping(value = "/test", method = RequestMethod.POST)
-	public String showTestPagePOST(@RequestParam("name") String name, Model model) {
-
-		logger.info("[START] ORALCEに接続して受注データを取得します。");
-		Calendar cal = Calendar.getInstance();
-		Date now = cal.getTime();
-
-
-		Map<String,Long> monthEarnings = earningsCalculate.getSomeDayEarnings(ConvertUtils.covDate(now, true) ,ConvertUtils.covDate(now, false));
-
-		//		/*当日の売上金額を取得*/
-		//		Long todayEarnings = earningsCalculate.calculateTodayEarnings();
-		//
-		//		logger.info(simpleDateFormat.format(new Date()) + "の売上は" + todayEarnings + "です。");
-		//
-		//
-		//		/* 前日から１週間前までの売上データを取得 */
-		//		Calendar calendar = Calendar.getInstance();
-		//		calendar.setTime(new Date());
-		//		calendar.add(Calendar.DATE,-1);
-		//		Map<String, Long> daysEarnings = earningsCalculate.getSomeDayEarnings(calendar.getTime(), 6);
-		//
-		//		for(String key :daysEarnings.keySet()) {
-		//			logger.info(key + "の売上は" + daysEarnings.get(key) + "です。");
-		//		}
-		//
-		//		daysEarnings.put(simpleDateFormat.format(new Date()), todayEarnings);
-
-		logger.info("[END  ] ORALCEに接続して受注データを取得します。");
-
-		model.addAttribute("message", "こんにちは" + name + "さん");
-		model.addAttribute("earnings", monthEarnings);
-
-		return "test";
-	}
-
+	/**
+	 * kintoneの売上予算表のレコードに同一日の予算レコードがあるか確認し、
+	 * 作成もしくは削除する
+	 * @param client kintone Client
+	 * @param achievementRecords 売上予算レコード
+	 * @param thisMonthStr 
+	 * @param cumulativeSales
+	 */
 	private void createOrUpdateAchievementRecord(KintoneClient client, List<Record> achievementRecords, String thisMonthStr,Long cumulativeSales) {
 
 		//あれば、更新
