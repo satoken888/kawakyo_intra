@@ -44,9 +44,9 @@ public class NotifyCocktailInfoToLINE {
         Map<String, Long> lastYearMonthEarnings = earningsCalculate.getSomeDayEarnings(ConvertUtils.covDate(lastYearDate, true), ConvertUtils.covDate(lastYearDate, false));
         lastYearMonthEarnings = earningsCalculate.addHolidayEarnings(lastYearCal.get(Calendar.YEAR),lastYearCal.get(Calendar.MONTH), lastYearMonthEarnings);
 
-        String message = "本日の売上金額：" + String.valueOf(monthEarnings.get(today)) + "\n" +
-                        "今月の累計売上金額：" + String.valueOf(cumulativeSales) +  "\n" + 
-                        "昨年の同月売上合計金額：" + String.valueOf(lastYearMonthEarnings.values().stream().mapToLong(l -> l).sum()) + "\n" +
+        String message = "\n本日の売上金額：" + String.format("%,d",monthEarnings.get(today)) + "\n\n" +
+                        "今月の累計売上金額：" + String.format("%,d",cumulativeSales) +  "\n\n" + 
+                        "昨年の同月売上合計金額：" + String.format("%,d",lastYearMonthEarnings.values().stream().mapToLong(l -> l).sum())) + "\n\n" +
                         "みなさん、本日もお疲れ様でした！";
         
         //営業部LINEへ通知
