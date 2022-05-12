@@ -46,7 +46,7 @@ public class NotifyCocktailInfoToLINE {
 
         String message = "本日の売上金額：" + String.valueOf(monthEarnings.get(today)) + "\n" +
                         "今月の累計売上金額：" + String.valueOf(cumulativeSales) +  "\n" + 
-                        "昨年の同月売上合計金額：" + String.valueOf(lastYearMonthEarnings) + "\n" +
+                        "昨年の同月売上合計金額：" + String.valueOf(lastYearMonthEarnings.values().stream().mapToLong(l -> l).sum()) + "\n" +
                         "みなさん、本日もお疲れ様でした！";
         
         //営業部LINEへ通知
