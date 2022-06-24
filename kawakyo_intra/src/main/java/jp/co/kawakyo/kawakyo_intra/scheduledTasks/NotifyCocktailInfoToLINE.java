@@ -1,6 +1,8 @@
 package jp.co.kawakyo.kawakyo_intra.scheduledTasks;
 
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
@@ -44,9 +46,23 @@ public class NotifyCocktailInfoToLINE {
         Map<String, Long> lastYearMonthEarnings = earningsCalculate.getSomeDayEarnings(ConvertUtils.covDate(lastYearDate, true), ConvertUtils.covDate(lastYearDate, false));
         lastYearMonthEarnings = earningsCalculate.addHolidayEarnings(lastYearCal.get(Calendar.YEAR),lastYearCal.get(Calendar.MONTH), lastYearMonthEarnings);
 
+        //今年、前年の同日までの売上合計金額を算出
+        //その後前年同日比を算出する。
+        Long earningsToToday = 0L;
+        Long earningsToLastYearToday = 0L;
+        ArrayList<Long> monthEarningsList = new ArrayList<Long>(monthEarnings.values());
+        ArrayList<Long> lastYearMonthEarningsList = new ArrayList<Long>(lastYearMonthEarnings.values());
+        for(int i = 0; i < cal.get(Calendar.DAY_OF_MONTH); i++) {
+            earningsToToday += monthEarningsList.get(i);
+            earningsToLastYearToday += lastYearMonthEarningsList.get(i);
+        }
+        Long earningsRatio = earningsToLastYearToday == 0 ? 0 : earningsToToday / earningsToLastYearToday;
+        DecimalFormat dNum = new DecimalFormat("##0.00%");
+
         String message = "\n本日の売上金額：" + String.format("%,d",monthEarnings.get(today)) + "\n\n" +
-                        "今月の累計売上金額：" + String.format("%,d",cumulativeSales) +  "\n\n" + 
-                        "昨年の同月売上合計金額：" + String.format("%,d",lastYearMonthEarnings.values().stream().mapToLong(l -> l).sum())) + "\n\n" +
+                        "今月の累計売上金額：" + String.format("%,d",cumulativeSales) +  "\n" +
+                        "前年同日比：" + dNum.format(earningsRatio) +  "\n\n" +
+                        "昨年の同月売上合計金額：" + String.format("%,d",lastYearMonthEarnings.values().stream().mapToLong(l -> l).sum()) + "\n\n" +
                         "みなさん、本日もお疲れ様でした！";
         
         //営業部LINEへ通知
