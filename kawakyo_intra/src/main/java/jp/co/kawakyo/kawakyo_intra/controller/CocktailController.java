@@ -25,7 +25,6 @@ import com.kintone.client.model.record.Record;
 import jp.co.kawakyo.kawakyo_intra.model.logic.EarningsCalculate;
 import jp.co.kawakyo.kawakyo_intra.utils.ConvertUtils;
 import jp.co.kawakyo.kawakyo_intra.utils.KintoneConstants;
-import jp.co.kawakyo.kawakyo_intra.utils.LineNotify;
 
 @Controller
 public class CocktailController {

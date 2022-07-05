@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-App<kawakyo_intra>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "jp.co.kawakyo.kawakyo_intra.App",
+            "projectName": "kawakyo_intra",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
