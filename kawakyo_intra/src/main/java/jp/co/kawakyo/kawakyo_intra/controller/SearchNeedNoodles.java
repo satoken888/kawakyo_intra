@@ -168,15 +168,15 @@ public class SearchNeedNoodles {
         }
 
         //できた商品リストから麺の情報をピックアップ
-        String HT_120 = String.valueOf(resultMap.get("00020890"));
-        String HT_130 = String.valueOf(resultMap.get("00020888"));
-        String yomogi = String.valueOf(resultMap.get("00007110"));
-        String gokubuto_120 = String.valueOf(resultMap.get("00020876"));
-        String kirin_150 = String.valueOf(resultMap.get("00020882"));
-        String hasegawa = String.valueOf(resultMap.get("00020884"));
-        String HT_120_hoso = String.valueOf(resultMap.get("00020891"));
-        String hannama = String.valueOf(resultMap.get("00020991"));
-        String takasui_130 = String.valueOf(resultMap.get("10001013"));
+        String HT_120 = String.valueOf(resultMap.get("00020890") == null ? 0 : resultMap.get("00020890"));
+        String HT_130 = String.valueOf(resultMap.get("00020888") == null ? 0 : resultMap.get("00020888"));
+        String yomogi = String.valueOf(resultMap.get("00007110") == null ? 0 : resultMap.get("00007110"));
+        String gokubuto_120 = String.valueOf(resultMap.get("00020876") == null ? 0 : resultMap.get("00020876"));
+        String kirin_150 = String.valueOf(resultMap.get("00020882") == null ? 0 : resultMap.get("00020882"));
+        String hasegawa = String.valueOf(resultMap.get("00020884") == null ? 0 : resultMap.get("00020884"));
+        String HT_120_hoso = String.valueOf(resultMap.get("00020891") == null ? 0 : resultMap.get("00020891"));
+        String hannama = String.valueOf(resultMap.get("00020991") == null ? 0 : resultMap.get("00020991"));
+        String takasui_130 = String.valueOf(resultMap.get("10001013") == null ? 0 : resultMap.get("10001013"));
 
 
         //画面表示にデータを渡す
