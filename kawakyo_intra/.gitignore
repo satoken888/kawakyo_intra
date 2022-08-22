@@ -1,2 +1,3 @@
 # targetフォルダを除外
 /target/
+/.apt_generated/
