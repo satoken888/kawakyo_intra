@@ -1,0 +1,39 @@
+.button1{
+    background-color: red;
+    width: 500px;
+    height: 50px;
+    font-size: 30px;
+}
+
+.button2{
+    background-color: yellow;
+    width: 500px;
+    height: 50px;
+    font-size: 30px;
+}
+
+.button3{
+    background-color: rgb(191, 245, 191);
+    width: 500px;
+    height: 50px;
+    font-size: 30px;
+}
+
+button{ 
+    cursor: pointer;
+    width: 500px;
+    height: 50px;
+    font-size: 30px;
+}
+
+button:active{
+    background: blue;
+    color: #FFF;
+}
+
+.button-wrapper{
+    text-align: center;
+}
+h1{
+    text-align: center;
+}
