@@ -54,6 +54,35 @@ public class OrderCustomerService {
 		
 		return rtnOrderCustomerView;
 	}
+
+	/**
+	 * 受注日、出荷予定日に合致し、
+	 * 指定の受注Ｎｏ以降の受注を検索する
+	 * @param orderDate
+	 * @param shippingDate
+	 * @param orderNo
+	 * @return
+	 */
+	public List<JDNTHAEntity> getOrderRecord(String orderDate,String shippingDate,String orderNo) {
+
+		List<JDNTHAEntity> result = new ArrayList<JDNTHAEntity>();
+
+		List<Object> orderCustomerInfoList = jdnthaRepository.findOrderCustomerGteOrderNo(orderDate, shippingDate, orderNo);
+
+		Iterator<Object> itr = orderCustomerInfoList.iterator();
+		while(itr.hasNext()) {
+			Object[] obj = (Object[])itr.next();
+			JDNTHAEntity record = new JDNTHAEntity();
+			record.setJdnno(String.valueOf(obj[0]));
+			record.setTokcd(String.valueOf(obj[1]));
+			record.setTokrn(String.valueOf(obj[2]));
+			record.setJucsyydt(String.valueOf(obj[3]));
+			record.setSbauodkn(String.valueOf(obj[4]));
+			result.add(record);
+		}
+		return result;
+
+	}
 	
 	/**
 	 * SQL発行のための条件文（受注日によるin句）
