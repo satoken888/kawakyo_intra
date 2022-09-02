@@ -30,7 +30,7 @@ public class NotifyOrderToPatlite {
 
     Logger logger = LoggerFactory.getLogger(NotifyOrderToPatlite.class);
 
-    @Scheduled(cron = "0 */1 8-18 * * ?")
+    @Scheduled(cron = "0 */1 8-18 * * MON-SAT")
     public void execute() {
         logger.debug("パトライト処理開始");
         logger.debug("lastOrderId : " + lastOrderId);
@@ -66,7 +66,7 @@ public class NotifyOrderToPatlite {
         String alertStr = String.join("", red, yellow, green, "000");
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault();) {
-            HttpGet httpGet = new HttpGet("http://192.168.1.97/api/control?alert=" + alertStr);
+            HttpGet httpGet = new HttpGet("http://192.168.100.9/api/control?alert=" + alertStr);
             // HTTPリクエストを実行します。 HTTPステータスが200の場合は取得したHTMLを表示します。
             try (CloseableHttpResponse httpResponse = httpClient.execute(httpGet);) {
                 if (httpResponse.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {

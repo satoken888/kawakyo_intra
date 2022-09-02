@@ -64,7 +64,7 @@ public class CocktailController {
 
 		//kintoneとのコネクション作成
 		logger.debug("kintone初期化処理 開始");
-		try(KintoneClient client = KintoneClientBuilder.create(KintoneConstants.KINTONE_URL).authByApiToken(KintoneConstants.API_TOKEN).build()) {
+		try(KintoneClient client = KintoneClientBuilder.create(KintoneConstants.KINTONE_URL).authByApiToken(KintoneConstants.KINTONE_SALESINFO_API_TOKEN).build()) {
 
 			logger.debug("kintone初期化処理 終了");
 

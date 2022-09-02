@@ -56,116 +56,8 @@ public class SearchNeedNoodles {
                                     @RequestParam(name="inputShippingDateEnd")String inputShippingDateEnd) {
         logger.info("麺製造数計算処理 start");
 
-        //出荷予定日の期間内の受注情報を検索
-        List<JDNTRAEntity> orderInfoList = itemManagementService.findAllOrderDetailsByShippingDate(inputShippingDateStart, inputShippingDateEnd);
 
-        //検索結果から手配内訳リストを作成
-        Map<String,Integer> itemQuantityMap = createItemQuantityMap(orderInfoList);
-        logger.debug("=======================");
-        logger.debug("商品DB取得後");
-        logger.debug("00006461：" + itemQuantityMap.get("00006461        "));
-        logger.debug("00006463：" + itemQuantityMap.get("00006463        "));
-        logger.debug("00010019：" + itemQuantityMap.get("00010019        "));
-        logger.debug("00010016：" + itemQuantityMap.get("00010016        "));
-        logger.debug("=======================");
-
-        //セット構成マスタに該当商品があるか検索
-        //あれば商品を分解、なければそのまま
-        List<HINMTFEntity> setItemInfoList = itemManagementService.findAllSetItemMst();
-        Set<String> deleteItemCodeList = new TreeSet<String>();
-        Map<String,Integer> addItemMap = new HashMap<String,Integer>();
-        for(String itemCode : itemQuantityMap.keySet()) {
-            //手配内訳商品ごとにループ
-            for(HINMTFEntity entity : setItemInfoList) {
-                //セット商品ごとにループ
-                if(StringUtils.equals(entity.getHincd(), itemCode)){
-                    //手配内訳商品の中にセット商品があった場合
-                    //追加商品リストに商品コードと商品構成数×受注数の個数を追加する
-                    
-                    if(addItemMap.containsKey(entity.getKoshincd())) {
-                        //分解先の商品がすでに追加商品リストに存在する場合
-                        addItemMap.replace(entity.getKoshincd(), addItemMap.get(entity.getKoshincd()) + itemQuantityMap.get(itemCode) * Integer.valueOf(entity.getKoscassu()));
-                    } else {
-                        //存在しない場合
-                        addItemMap.put(entity.getKoshincd(), itemQuantityMap.get(itemCode) * Integer.valueOf(entity.getKoscassu()));
-                    }
-                    deleteItemCodeList.add(itemCode);
-                }
-            }
-        }
-
-        //追加商品リストと手配内訳リストを合算
-        for(String itemCode : addItemMap.keySet()) {
-            if(itemQuantityMap.containsKey(itemCode)) {
-                itemQuantityMap.replace(itemCode, addItemMap.get(itemCode) + itemQuantityMap.get(itemCode));
-            } else {
-                itemQuantityMap.put(itemCode, addItemMap.get(itemCode));
-            }
-        }
-
-        //もとのセット商品の情報が存在すると不要な情報が残ってしまうので、
-        //構成品に分解したセット商品のおおもとの情報を削除する。
-        for(String itemCode: deleteItemCodeList) {
-            itemQuantityMap.remove(itemCode);
-        }
-
-        logger.debug("=======================");
-        logger.debug("セット商品対応後");
-        logger.debug("00006461：" + itemQuantityMap.get("00006461        "));
-        logger.debug("00006463：" + itemQuantityMap.get("00006463        "));
-        logger.debug("00010019：" + itemQuantityMap.get("00010019        "));
-        logger.debug("00010016：" + itemQuantityMap.get("00010016        "));
-        logger.debug("=======================");
-
-        //商品内容マスタに該当商品があるか検索
-        //あれば商品を分解、なければそのまま
-        List<HINMTZEntity> itemContentsMst = itemManagementService.findAllItemContentsMst();
-        deleteItemCodeList = new TreeSet<String>();
-        addItemMap = new HashMap<String,Integer>();
-        for(String itemCode : itemQuantityMap.keySet()) {
-            for(HINMTZEntity entity : itemContentsMst) {
-                if(StringUtils.equals(entity.getHincd(), itemCode)) {
-                    if(addItemMap.containsKey(entity.getKoshincd())) {
-                        //分解先の商品がすでに手配内訳リストに存在する場合
-                        addItemMap.replace(entity.getKoshincd(), addItemMap.get(entity.getKoshincd()) + itemQuantityMap.get(itemCode) * Integer.valueOf(entity.getKoscassu()));
-                    } else {
-                        //存在しない場合
-                        addItemMap.put(entity.getKoshincd(), itemQuantityMap.get(itemCode) * Integer.valueOf(entity.getKoscassu()));
-                    }
-                    deleteItemCodeList.add(itemCode);
-                }
-            }
-        }
-
-        //追加商品リストと手配内訳商品リストを合算
-        for(String itemCode : addItemMap.keySet()) {
-            if(itemQuantityMap.containsKey(itemCode)) {
-                itemQuantityMap.replace(itemCode, addItemMap.get(itemCode) + itemQuantityMap.get(itemCode));
-            } else {
-                itemQuantityMap.put(itemCode, addItemMap.get(itemCode));
-            }
-        }
-
-        //もとの商品の情報が存在すると不要な情報が残ってしまうので、
-        //構成品に分解した商品のおおもとの情報を削除する。
-        for(String itemCode: deleteItemCodeList) {
-            itemQuantityMap.remove(itemCode);
-        }
-
-        logger.debug("=======================");
-        logger.debug("商品内容マスタ適用後");
-        logger.debug("00006461：" + itemQuantityMap.get("00006461        "));
-        logger.debug("00006463：" + itemQuantityMap.get("00006463        "));
-        logger.debug("00010019：" + itemQuantityMap.get("00010019        "));
-        logger.debug("00010016：" + itemQuantityMap.get("00010016        "));
-        logger.debug("=======================");
-
-        //キーのトリミング（DBの商品コードに空白がついてしまっているため）
-        //TODO:無駄な処理
-        Map<String,Integer> resultMap = new HashMap<String,Integer>();
-        for(String key : itemQuantityMap.keySet()) {
-            resultMap.put(key.trim(), itemQuantityMap.get(key));
-        }
+        Map<String, Integer> resultMap = getShippingItemList(inputShippingDateStart, inputShippingDateEnd);
 
         //できた商品リストから麺の情報をピックアップ
         String HT_120 = String.valueOf(resultMap.get("00020890") == null ? 0 : resultMap.get("00020890"));
@@ -194,6 +86,131 @@ public class SearchNeedNoodles {
 
         logger.info("麺製造数計算処理 end");
         return "searchNoodles";
+    }
+
+    /**
+     * 使用品リストの取得
+     * 
+     * 該当の出荷予定日内の使用するアイテムリストを取得する
+     * 
+     * @param inputShippingDateStart 出荷予定日（開始）
+     * @param inputShippingDateEnd 出荷予定日（終了）
+     * @return 該当の出荷予定日期間内に使用するアイテムのリスト
+     */
+    public Map<String, Integer> getShippingItemList(String inputShippingDateStart,String inputShippingDateEnd) {
+                //出荷予定日の期間内の受注情報を検索
+                List<JDNTRAEntity> orderInfoList = itemManagementService.findAllOrderDetailsByShippingDate(inputShippingDateStart, inputShippingDateEnd);
+
+                //検索結果から手配内訳リストを作成
+                Map<String,Integer> itemQuantityMap = createItemQuantityMap(orderInfoList);
+                logger.debug("=======================");
+                logger.debug("商品DB取得後");
+                logger.debug("00006461：" + itemQuantityMap.get("00006461        "));
+                logger.debug("00006463：" + itemQuantityMap.get("00006463        "));
+                logger.debug("00010019：" + itemQuantityMap.get("00010019        "));
+                logger.debug("00010016：" + itemQuantityMap.get("00010016        "));
+                logger.debug("=======================");
+        
+                //セット構成マスタに該当商品があるか検索
+                //あれば商品を分解、なければそのまま
+                List<HINMTFEntity> setItemInfoList = itemManagementService.findAllSetItemMst();
+                Set<String> deleteItemCodeList = new TreeSet<String>();
+                Map<String,Integer> addItemMap = new HashMap<String,Integer>();
+                for(String itemCode : itemQuantityMap.keySet()) {
+                    //手配内訳商品ごとにループ
+                    for(HINMTFEntity entity : setItemInfoList) {
+                        //セット商品ごとにループ
+                        if(StringUtils.equals(entity.getHincd(), itemCode)){
+                            //手配内訳商品の中にセット商品があった場合
+                            //追加商品リストに商品コードと商品構成数×受注数の個数を追加する
+                            
+                            if(addItemMap.containsKey(entity.getKoshincd())) {
+                                //分解先の商品がすでに追加商品リストに存在する場合
+                                addItemMap.replace(entity.getKoshincd(), addItemMap.get(entity.getKoshincd()) + itemQuantityMap.get(itemCode) * Integer.valueOf(entity.getKoscassu()));
+                            } else {
+                                //存在しない場合
+                                addItemMap.put(entity.getKoshincd(), itemQuantityMap.get(itemCode) * Integer.valueOf(entity.getKoscassu()));
+                            }
+                            deleteItemCodeList.add(itemCode);
+                        }
+                    }
+                }
+        
+                //追加商品リストと手配内訳リストを合算
+                for(String itemCode : addItemMap.keySet()) {
+                    if(itemQuantityMap.containsKey(itemCode)) {
+                        itemQuantityMap.replace(itemCode, addItemMap.get(itemCode) + itemQuantityMap.get(itemCode));
+                    } else {
+                        itemQuantityMap.put(itemCode, addItemMap.get(itemCode));
+                    }
+                }
+        
+                //もとのセット商品の情報が存在すると不要な情報が残ってしまうので、
+                //構成品に分解したセット商品のおおもとの情報を削除する。
+                for(String itemCode: deleteItemCodeList) {
+                    itemQuantityMap.remove(itemCode);
+                }
+        
+                logger.debug("=======================");
+                logger.debug("セット商品対応後");
+                logger.debug("00006461：" + itemQuantityMap.get("00006461        "));
+                logger.debug("00006463：" + itemQuantityMap.get("00006463        "));
+                logger.debug("00010019：" + itemQuantityMap.get("00010019        "));
+                logger.debug("00010016：" + itemQuantityMap.get("00010016        "));
+                logger.debug("=======================");
+        
+                //商品内容マスタに該当商品があるか検索
+                //あれば商品を分解、なければそのまま
+                List<HINMTZEntity> itemContentsMst = itemManagementService.findAllItemContentsMst();
+                deleteItemCodeList = new TreeSet<String>();
+                addItemMap = new HashMap<String,Integer>();
+                for(String itemCode : itemQuantityMap.keySet()) {
+                    for(HINMTZEntity entity : itemContentsMst) {
+                        if(StringUtils.equals(entity.getHincd(), itemCode)) {
+                            if(addItemMap.containsKey(entity.getKoshincd())) {
+                                //分解先の商品がすでに手配内訳リストに存在する場合
+                                addItemMap.replace(entity.getKoshincd(), addItemMap.get(entity.getKoshincd()) + itemQuantityMap.get(itemCode) * Integer.valueOf(entity.getKoscassu()));
+                            } else {
+                                //存在しない場合
+                                addItemMap.put(entity.getKoshincd(), itemQuantityMap.get(itemCode) * Integer.valueOf(entity.getKoscassu()));
+                            }
+                            // deleteItemCodeList.add(itemCode);
+                        }
+                    }
+                }
+        
+                //追加商品リストと手配内訳商品リストを合算
+                for(String itemCode : addItemMap.keySet()) {
+                    if(itemQuantityMap.containsKey(itemCode)) {
+                        itemQuantityMap.replace(itemCode, addItemMap.get(itemCode) + itemQuantityMap.get(itemCode));
+                    } else {
+                        itemQuantityMap.put(itemCode, addItemMap.get(itemCode));
+                    }
+                }
+        
+                //もとの商品の情報が存在すると不要な情報が残ってしまうので、
+                //構成品に分解した商品のおおもとの情報を削除する。
+                //TODO:これは必要か否か確認
+                // for(String itemCode: deleteItemCodeList) {
+                //     itemQuantityMap.remove(itemCode);
+                // }
+        
+                logger.debug("=======================");
+                logger.debug("商品内容マスタ適用後");
+                logger.debug("00006461：" + itemQuantityMap.get("00006461        "));
+                logger.debug("00006463：" + itemQuantityMap.get("00006463        "));
+                logger.debug("00010019：" + itemQuantityMap.get("00010019        "));
+                logger.debug("00010016：" + itemQuantityMap.get("00010016        "));
+                logger.debug("=======================");
+        
+                //キーのトリミング（DBの商品コードに空白がついてしまっているため）
+                //TODO:無駄な処理
+                Map<String,Integer> resultMap = new HashMap<String,Integer>();
+                for(String key : itemQuantityMap.keySet()) {
+                    resultMap.put(key.trim(), itemQuantityMap.get(key));
+                }
+
+                return resultMap;
     }
 
     /**
