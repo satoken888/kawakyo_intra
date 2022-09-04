@@ -10,6 +10,7 @@ import java.util.TreeSet;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +24,7 @@ import jp.co.kawakyo.kawakyo_intra.model.entity.form.searchNoodlesInputForm;
 import jp.co.kawakyo.kawakyo_intra.model.logic.ItemManagementService;
 
 @Controller
+@Component
 public class SearchNeedNoodles {
 
     @Autowired

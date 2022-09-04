@@ -34,6 +34,8 @@ public class NotifyCocktailInfoToLINE {
 
     @Autowired
 	EarningsCalculate earningsCalculate;
+    @Autowired
+    SearchNeedNoodles searchNeedNoodles;
 
     @Scheduled(cron="0 0 19  * * ? ")   //毎日19時に実施
     public void execute(){
@@ -69,7 +71,7 @@ public class NotifyCocktailInfoToLINE {
             earningsToLastYearToday = earningsToLastYearToday.add(new BigDecimal(lastYearMonthEarningsList.get(i)));
         }
 
-        SearchNeedNoodles searchNeedNoodles = new SearchNeedNoodles();
+
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
         Map<String, Integer> shippingItemList = searchNeedNoodles.getShippingItemList(format.format(now), format.format(now));
         Integer todayNoodles = getTodaysNoodleCount(shippingItemList);
