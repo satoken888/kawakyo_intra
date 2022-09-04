@@ -81,10 +81,10 @@ public class NotifyCocktailInfoToLINE {
                         "前年同日比：" + dNum.format(earningsToToday.divide(earningsToLastYearToday, 6,BigDecimal.ROUND_HALF_UP)) +  "\n\n" +
                         "昨年の同月売上合計金額：" + String.format("%,d",lastYearMonthEarnings.values().stream().mapToLong(l -> l).sum()) + "\n\n" +
                         "みなさん、本日もお疲れ様でした！\n" +
-                        "==========================\n" + 
+                        "=======================\n" + 
                         "本日の出荷麺数：" + String.format("%,d", todayNoodles) + "個です\n" +
                         "★冬場の餅問題対策のため実施↓↓↓\n"+
-                        "本日の黄箱5食出荷数：" + String.format("%,d",shippingItemList.get("00007600")) + "個です";
+                        "本日の黄箱5食出荷数：" + String.format("%,d",shippingItemList.get("00007600") == null ? 0 : shippingItemList.get("00007600")) + "個です";
 
         
         //営業部LINEへ通知
