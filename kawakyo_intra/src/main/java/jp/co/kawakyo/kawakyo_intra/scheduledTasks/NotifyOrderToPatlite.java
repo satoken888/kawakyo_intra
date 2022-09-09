@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -51,8 +52,30 @@ public class NotifyOrderToPatlite {
 
         // 当日出荷の受注が存在すれば、パトライトを表示
         if (CollectionUtils.isNotEmpty(orderList)) {
+
+            String red = "9";
+            String yellow = "9";
+            String green = "9";
+
+            //店舗からの受注数
+            long shopOrderCount = orderList.stream().filter(record -> StringUtils.equals(record.getSyubacid(),"999") || StringUtils.equals(record.getSyubacid(),"900")).count();
+            //一般オーダーからの受注数
+            long normalOrderCount = orderList.stream().filter(record -> !StringUtils.equals(record.getSyubacid(),"999") && !StringUtils.equals(record.getSyubacid(),"900")).count();
+
+            
+            if(normalOrderCount > 0) {
+                //一般オーダーの受注がある場合
+                //赤ランプを点滅
+                red = "2";
+            }
+            if(shopOrderCount > 0) {
+                //自店舗オーダーの受注がある場合
+                //黄色ランプを点滅
+                yellow = "2";
+            }
+
             // パトライトを表示
-            callPatliteRedFlash("2", "0", "0");
+            callPatliteFlash(red, yellow, green);
             
             // 取得した受注リストの中から最大の受注Noを取得し、static変数に格納
             // 次回の実行時の開始受注Noに設定する
@@ -62,8 +85,8 @@ public class NotifyOrderToPatlite {
 
     }
 
-    private void callPatliteRedFlash(String red, String yellow, String green) {
-        String alertStr = String.join("", red, yellow, green, "000");
+    private void callPatliteFlash(String red, String yellow, String green) {
+        String alertStr = String.join("", red, yellow, green, "999");
 
         try (CloseableHttpClient httpClient = HttpClients.createDefault();) {
             HttpGet httpGet = new HttpGet("http://192.168.100.9/api/control?alert=" + alertStr);

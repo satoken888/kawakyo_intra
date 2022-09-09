@@ -78,6 +78,7 @@ public class OrderCustomerService {
 			record.setTokrn(String.valueOf(obj[2]));
 			record.setJucsyydt(String.valueOf(obj[3]));
 			record.setSbauodkn(String.valueOf(obj[4]));
+			record.setSyubacid(String.valueOf(obj[5]));
 			result.add(record);
 		}
 		return result;

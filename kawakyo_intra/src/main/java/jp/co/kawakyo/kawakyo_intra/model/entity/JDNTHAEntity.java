@@ -28,5 +28,7 @@ public class JDNTHAEntity {
   private String jucsyydt;
   /** 受注金額（伝票計） */
   private String sbauodkn;
+  /** バッチナンバー */
+  private String syubacid;
 
 }
