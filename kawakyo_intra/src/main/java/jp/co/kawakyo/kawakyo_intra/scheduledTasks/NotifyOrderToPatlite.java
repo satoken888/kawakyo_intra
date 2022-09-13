@@ -44,10 +44,12 @@ public class NotifyOrderToPatlite {
         // 現在時刻の取得
         Calendar cal = Calendar.getInstance();
         String todayStr = new SimpleDateFormat("yyyyMMdd").format(cal.getTime());
+        cal.add(Calendar.DAY_OF_MONTH, 1);
+        String tommorowStr = new SimpleDateFormat("yyyyMMdd").format(cal.getTime());
 
-        // 直近10分間の受注で「当日出荷」の受注情報の取得
+        // 直近10分間の受注で「当日・明日出荷」の受注情報の取得
         logger.debug("DB接続開始");
-        List<JDNTHAEntity> orderList = orderCustomerService.getOrderRecord(todayStr, todayStr, lastOrderId);
+        List<JDNTHAEntity> orderList = orderCustomerService.getOrderRecord(todayStr, tommorowStr, lastOrderId);
         logger.debug("DB接続終了");
 
         // 当日出荷の受注が存在すれば、パトライトを表示
@@ -57,12 +59,12 @@ public class NotifyOrderToPatlite {
             String yellow = "9";
             String green = "9";
 
-            //店舗からの受注数
+            //店舗からの受注数（当日・明日の出荷予定日を伝票を対象としている）
             long shopOrderCount = orderList.stream().filter(record -> StringUtils.equals(record.getSyubacid(),"999") || StringUtils.equals(record.getSyubacid(),"900")).count();
-            //一般オーダーからの受注数
-            long normalOrderCount = orderList.stream().filter(record -> !StringUtils.equals(record.getSyubacid(),"999") && !StringUtils.equals(record.getSyubacid(),"900")).count();
+            //当日出荷の一般オーダーの受注数
+            long normalOrderCount = orderList.stream().filter(record -> StringUtils.equals(record.getJucsyydt(),todayStr))
+            .filter(record -> !StringUtils.equals(record.getSyubacid(),"999") && !StringUtils.equals(record.getSyubacid(),"900")).count();
 
-            
             if(normalOrderCount > 0) {
                 //一般オーダーの受注がある場合
                 //赤ランプを点滅
