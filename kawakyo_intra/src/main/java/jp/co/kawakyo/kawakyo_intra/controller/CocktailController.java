@@ -71,15 +71,15 @@ public class CocktailController {
 			//20時～20時10分の実施の際は当日累計売上をkintoneにupする。
 			//20211218現在、5分で画面遷移売上ビューと得意先ビューの変更が行われるようになっているため、
 			//10分までの間にindex.htmlを表示いた場合は実行するようにする。
-			if(cal.get(Calendar.HOUR_OF_DAY) == 20 && cal.get(Calendar.MINUTE) <= 10) {
+			// if(cal.get(Calendar.HOUR_OF_DAY) == 20 && cal.get(Calendar.MINUTE) <= 10) {
 
-				//kintoneに接続して、当月の累計実績レコードを取得
-				List<Record> achievementRecords = client.record().getRecords(KintoneConstants.KINTONE_SALESBUDGET_APP_CODE, "month in (\"" + kintoneForecastDate + "\") and forecast_div in (\"実績\")");
+			// 	//kintoneに接続して、当月の累計実績レコードを取得
+			// 	List<Record> achievementRecords = client.record().getRecords(KintoneConstants.KINTONE_SALESBUDGET_APP_CODE, "month in (\"" + kintoneForecastDate + "\") and forecast_div in (\"実績\")");
 
-				//kintoneの売上予算表に実績数字があるかないかで本日売上の新規登録、更新のどちらかを行う。
-				//すでに同月の実績数字がある場合、更新。そうでない場合はレコードの新規作成
-				createOrUpdateAchievementRecord(client, achievementRecords, kintoneForecastDate, cumulativeSales);
-			}
+			// 	//kintoneの売上予算表に実績数字があるかないかで本日売上の新規登録、更新のどちらかを行う。
+			// 	//すでに同月の実績数字がある場合、更新。そうでない場合はレコードの新規作成
+			// 	createOrUpdateAchievementRecord(client, achievementRecords, kintoneForecastDate, cumulativeSales);
+			// }
 
 			//kintoneの売上予算表から売上予算の取得
 			logger.debug("kintone売上情報取得 開始");
@@ -122,24 +122,24 @@ public class CocktailController {
 	 * @param thisMonthStr 
 	 * @param cumulativeSales
 	 */
-	private void createOrUpdateAchievementRecord(KintoneClient client, List<Record> achievementRecords, String thisMonthStr,Long cumulativeSales) {
+	// private void createOrUpdateAchievementRecord(KintoneClient client, List<Record> achievementRecords, String thisMonthStr,Long cumulativeSales) {
 
-		//あれば、更新
-		if(!CollectionUtils.isEmpty(achievementRecords)) {
-			Record achievementRecordOrg = achievementRecords.get(0);
-			Record achievementRecord = Record.newFrom(achievementRecordOrg);
-			Long recordId = achievementRecordOrg.getId();
-			achievementRecord.putField(KintoneConstants.KINTONE_SALESBUDGET_FIELD_CODE, new NumberFieldValue(cumulativeSales));
-			client.record().updateRecord(KintoneConstants.KINTONE_SALESBUDGET_APP_CODE, recordId, achievementRecord);
-		} else {
-			//なければ、作成を行う
-			Record achievementRecord = new Record();
-			achievementRecord.putField("department", new DropDownFieldValue(KintoneConstants.DEPARTMENT_MAINOFFICE));
-			achievementRecord.putField("forecast_div", new RadioButtonFieldValue(KintoneConstants.FORECAST_DIV_ACHIEVEMENT));
-			achievementRecord.putField("month", new DropDownFieldValue(thisMonthStr));
-			achievementRecord.putField(KintoneConstants.KINTONE_SALESBUDGET_FIELD_CODE, new NumberFieldValue(cumulativeSales));
-			client.record().addRecord(KintoneConstants.KINTONE_SALESBUDGET_APP_CODE, achievementRecord);
-		}
-	}
+	// 	//あれば、更新
+	// 	if(!CollectionUtils.isEmpty(achievementRecords)) {
+	// 		Record achievementRecordOrg = achievementRecords.get(0);
+	// 		Record achievementRecord = Record.newFrom(achievementRecordOrg);
+	// 		Long recordId = achievementRecordOrg.getId();
+	// 		achievementRecord.putField(KintoneConstants.KINTONE_SALESBUDGET_FIELD_CODE, new NumberFieldValue(cumulativeSales));
+	// 		client.record().updateRecord(KintoneConstants.KINTONE_SALESBUDGET_APP_CODE, recordId, achievementRecord);
+	// 	} else {
+	// 		//なければ、作成を行う
+	// 		Record achievementRecord = new Record();
+	// 		achievementRecord.putField("department", new DropDownFieldValue(KintoneConstants.DEPARTMENT_MAINOFFICE));
+	// 		achievementRecord.putField("forecast_div", new RadioButtonFieldValue(KintoneConstants.FORECAST_DIV_ACHIEVEMENT));
+	// 		achievementRecord.putField("month", new DropDownFieldValue(thisMonthStr));
+	// 		achievementRecord.putField(KintoneConstants.KINTONE_SALESBUDGET_FIELD_CODE, new NumberFieldValue(cumulativeSales));
+	// 		client.record().addRecord(KintoneConstants.KINTONE_SALESBUDGET_APP_CODE, achievementRecord);
+	// 	}
+	// }
 
 }

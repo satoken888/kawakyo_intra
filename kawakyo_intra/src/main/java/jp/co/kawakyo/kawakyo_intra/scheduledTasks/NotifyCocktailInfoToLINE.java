@@ -7,8 +7,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +19,9 @@ import org.springframework.stereotype.Component;
 
 import com.kintone.client.KintoneClient;
 import com.kintone.client.KintoneClientBuilder;
+import com.kintone.client.model.record.DropDownFieldValue;
 import com.kintone.client.model.record.NumberFieldValue;
+import com.kintone.client.model.record.RadioButtonFieldValue;
 import com.kintone.client.model.record.Record;
 
 import jp.co.kawakyo.kawakyo_intra.controller.SearchNeedNoodles;
@@ -71,11 +75,12 @@ public class NotifyCocktailInfoToLINE {
             earningsToLastYearToday = earningsToLastYearToday.add(new BigDecimal(lastYearMonthEarningsList.get(i)));
         }
 
-
+        //本日の出荷麺数の取得
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
         Map<String, Integer> shippingItemList = searchNeedNoodles.getShippingItemList(format.format(now), format.format(now));
         Integer todayNoodles = getTodaysNoodleCount(shippingItemList);
 
+        //LINEにながす文章の作成
         String message = "\n本日の売上金額：" + String.format("%,d",monthEarnings.get(today)) + "\n\n" +
                         "今月の累計売上金額：" + String.format("%,d",cumulativeSales) +  "\n" +
                         "前年同日比：" + dNum.format(earningsToToday.divide(earningsToLastYearToday, 6,BigDecimal.ROUND_HALF_UP)) +  "\n\n" +
@@ -100,7 +105,62 @@ public class NotifyCocktailInfoToLINE {
                                         shippingItemList.get("00020891"),
                                         shippingItemList.get("00020991"),
                                         shippingItemList.get("10001013"));
+
+        //今月の売上情報をkintoneへアップする
+        //日々更新、月初は新規作成の処理
+        sendEarningsThisMonthToKintone(cumulativeSales);
     }
+
+    /**
+     * kintoneに今月の売上情報を送信する
+     * @param cumulativeSales
+     */
+    private void sendEarningsThisMonthToKintone(Long cumulativeSales) {
+
+        //kintone検索用に日付文字列を「yyyy年mm月」で作成
+        Calendar cal = Calendar.getInstance();
+        String kintoneForecastDate = String.valueOf(cal.get(Calendar.YEAR)) + "年" + String.valueOf(cal.get(Calendar.MONTH)+1) + "月";
+
+        try(KintoneClient client = KintoneClientBuilder.create(KintoneConstants.KINTONE_URL).authByApiToken(KintoneConstants.KINTONE_SALESINFO_API_TOKEN).build()) {
+            //kintoneに接続して、当月の累計実績レコードを取得
+            List<Record> achievementRecords = client.record().getRecords(KintoneConstants.KINTONE_SALESBUDGET_APP_CODE, "month in (\"" + kintoneForecastDate + "\") and forecast_div in (\"実績\")");
+
+            //kintoneの売上予算表に実績数字があるかないかで本日売上の新規登録、更新のどちらかを行う。
+            //すでに同月の実績数字がある場合、更新。そうでない場合はレコードの新規作成
+            createOrUpdateAchievementRecord(client, achievementRecords, kintoneForecastDate, cumulativeSales);
+        } catch (IOException e) {
+			// TODO 自動生成された catch ブロック
+			e.printStackTrace();
+		}
+    }
+
+    /**
+	 * kintoneの売上予算表のレコードに同一日の予算レコードがあるか確認し、
+	 * 作成もしくは削除する
+	 * @param client kintone Client
+	 * @param achievementRecords 売上予算レコード
+	 * @param thisMonthStr 
+	 * @param cumulativeSales
+	 */
+	private void createOrUpdateAchievementRecord(KintoneClient client, List<Record> achievementRecords, String thisMonthStr,Long cumulativeSales) {
+
+		//あれば、更新
+		if(!CollectionUtils.isEmpty(achievementRecords)) {
+			Record achievementRecordOrg = achievementRecords.get(0);
+			Record achievementRecord = Record.newFrom(achievementRecordOrg);
+			Long recordId = achievementRecordOrg.getId();
+			achievementRecord.putField(KintoneConstants.KINTONE_SALESBUDGET_FIELD_CODE, new NumberFieldValue(cumulativeSales));
+			client.record().updateRecord(KintoneConstants.KINTONE_SALESBUDGET_APP_CODE, recordId, achievementRecord);
+		} else {
+			//なければ、作成を行う
+			Record achievementRecord = new Record();
+			achievementRecord.putField("department", new DropDownFieldValue(KintoneConstants.DEPARTMENT_MAINOFFICE));
+			achievementRecord.putField("forecast_div", new RadioButtonFieldValue(KintoneConstants.FORECAST_DIV_ACHIEVEMENT));
+			achievementRecord.putField("month", new DropDownFieldValue(thisMonthStr));
+			achievementRecord.putField(KintoneConstants.KINTONE_SALESBUDGET_FIELD_CODE, new NumberFieldValue(cumulativeSales));
+			client.record().addRecord(KintoneConstants.KINTONE_SALESBUDGET_APP_CODE, achievementRecord);
+		}
+	}
 
     /**
      * 麺の数をkintoneへ送信する

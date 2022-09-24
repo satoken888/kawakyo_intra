@@ -1,14 +1,26 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-<meta charset="UTF-8" />
-<title>河京イントラネット | 本日の受注取引先一覧</title>
+<head th:fragment="meta_header(title,links,scripts)">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta name="viewport"
+	content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link rel="stylesheet"
-	th:href="@{/webjars/bootstrap/4.3.1/css/bootstrap.min.css}" />
+	th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" />
 <link th:href="@{/css/dashboard.css}" rel="stylesheet">
+<script th:src="@{/webjars/jquery/3.3.1/jquery.min.js}"></script>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.9.0/feather.min.js"></script>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.bundle.js"></script>
+<script th:src="@{/webjars/bootstrap/4.3.1/js/bootstrap.min.js}"></script>
+<title th:text="'河京イントラネット | ' + ${title}">河京イントラネット</title>
+<th:block th:replace="${links} ?: _" />
+<th:block th:replace="${scripts} ?: _" />
 </head>
 <body>
-	<nav
+	<nav th:fragment="header"
 		class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow">
 		<a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/">河京　イントラネット</a> <input class="form-control form-control-dark w-100" type="text"
 			placeholder="Search" aria-label="Search">
@@ -20,26 +32,26 @@
 
 	<div class="container-fluid">
 		<div class="row">
-			<nav class="col-md-2 d-none d-md-block bg-light sidebar">
+			<nav class="col-md-2 d-none d-md-block bg-light sidebar" th:fragment="side_menu(activeDiv)">
 				<div class="sidebar-sticky">
 					<ul class="nav flex-column">
-						<li class="nav-item"><a class="nav-link active" href="/">
-								<span data-feather="home"></span> Dashboard <span
+						<li class="nav-item"><a class="nav-link" th:classappend="${activeDiv} == 1 ? 'active' : ''" href="/">
+								<span data-feather="home"></span> Dashboard 
+						</a></li>
+						<li class="nav-item"><a class="nav-link" th:classappend="${activeDiv} == 2 ? 'active' : ''" href="/todayClient"> <span
+								data-feather="shopping-cart"></span> Today's Client<span
 								class="sr-only">(current)</span>
 						</a></li>
-						<li class="nav-item"><a class="nav-link" href="/test"> <span
-								data-feather="file"></span> Test
+						<li class="nav-item"><a class="nav-link" th:classappend="${activeDiv} == 3 ? 'active' : ''" href="/searchNoodles"> <span
+								data-feather="file"></span> Count Noodles
 						</a></li>
-						<li class="nav-item"><a class="nav-link" href="#"> <span
-								data-feather="shopping-cart"></span> Coming soon...
-						</a></li>
-						<li class="nav-item"><a class="nav-link" href="#"> <span
+						<li class="nav-item"><a class="nav-link" th:classappend="${activeDiv} == 4 ? 'active' : ''" href="#"> <span
 								data-feather="users"></span> Coming soon...
 						</a></li>
-						<li class="nav-item"><a class="nav-link" href="#"> <span
+						<li class="nav-item"><a class="nav-link" th:classappend="${activeDiv} == 5 ? 'active' : ''" href="#"> <span
 								data-feather="bar-chart-2"></span> Coming soon...
 						</a></li>
-						<li class="nav-item"><a class="nav-link" href="#"> <span
+						<li class="nav-item"><a class="nav-link" th:classappend="${activeDiv} == 6 ? 'active' : ''" href="#"> <span
 								data-feather="layers"></span> Coming soon...
 						</a></li>
 					</ul>
@@ -67,22 +79,7 @@
 					</ul>
 				</div>
 			</nav>
-
-			<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
-				<!-- コンテンツエリア  -->
-				
-				
-				
-				
-				
-			</main>
 		</div>
 	</div>
-	<script th:src="@{/webjars/jquery/3.3.1/jquery.min.js}"></script>
-	<script
-		src="https://cdnjs.cloudflare.com/ajax/libs/feather-icons/4.9.0/feather.min.js"></script>
-	<script
-		src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.bundle.js"></script>
-	<script th:src="@{/webjars/bootstrap/4.3.1/js/bootstrap.min.js}"></script>
 </body>
 </html>
