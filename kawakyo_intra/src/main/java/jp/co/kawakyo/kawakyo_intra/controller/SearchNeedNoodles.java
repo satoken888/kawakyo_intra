@@ -189,14 +189,7 @@ public class SearchNeedNoodles {
                         itemQuantityMap.put(itemCode, addItemMap.get(itemCode));
                     }
                 }
-        
-                //もとの商品の情報が存在すると不要な情報が残ってしまうので、
-                //構成品に分解した商品のおおもとの情報を削除する。
-                //TODO:これは必要か否か確認
-                // for(String itemCode: deleteItemCodeList) {
-                //     itemQuantityMap.remove(itemCode);
-                // }
-        
+              
                 logger.debug("=======================");
                 logger.debug("商品内容マスタ適用後");
                 logger.debug("00006461：" + itemQuantityMap.get("00006461        "));

@@ -8,6 +8,8 @@ public class KintoneConstants {
 	public static final String KINTONE_SALESINFO_API_TOKEN = "mimiedXfPKYO81mtV9eEZ6szpccn1BQvdf8iePVt";
 
 	public static final String KINTONE_NOODLECOUNT_API_TOKEN = "ftpoCSxRiwA0XkGzopb1s6itQiHNo2H4DGFmGi5K";
+
+	public static final String KINTONE_SHIP_ITEM_COUNT_API_TOKEN = "dDu64JOEU5bbNOjXQpnRtc2OqjIkm3OurmFZTJbc";
 	
 	/** 河京kintone URL */
 	public static final String KINTONE_URL = "https://kawakyo.cybozu.com";
@@ -19,6 +21,7 @@ public class KintoneConstants {
 	/** kintoneの売上予算表のアプリ番号 */
 	public static final Long KINTONE_SALESBUDGET_APP_CODE = 49L;
 	public static final Long KINTONE_NOODLECOUNT_APP_CODE = 55L;
+	public static final Long KINTONE_SHIP_ITEM_COUNT_APP_CODE = 47L;
 	
 	////////////////////
 	//フィールドコード//
