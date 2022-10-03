@@ -117,8 +117,8 @@ public class NotifyCocktailInfoToLINE {
 
         // 25gチャーシュー、チャーシューメンマ、醤油スープ、50gメンマの数量をkintoneに送信する
         sendTodayShipItemInfoToKintone(shippingItemList.get("00007184"),
-                shippingItemList.get("00007183"),
-                shippingItemList.get("09013599"),
+                shippingItemList.get("00007183"), 
+                shippingItemList.get("09000252"),
                 shippingItemList.get("09000253"),
                 shippingItemList.get("09012862"),
                 shippingItemList.get("09012917"));
