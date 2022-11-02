@@ -202,7 +202,6 @@ public class SearchNeedNoodles {
                 logger.debug("=======================");
         
                 //キーのトリミング（DBの商品コードに空白がついてしまっているため）
-                //TODO:無駄な処理
                 Map<String,Integer> resultMap = new HashMap<String,Integer>();
                 for(String key : itemQuantityMap.keySet()) {
                     resultMap.put(key.trim(), itemQuantityMap.get(key));
