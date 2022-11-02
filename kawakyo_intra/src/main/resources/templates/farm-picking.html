@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head th:replace="base :: meta_header('産直ピンキングシステム',~{::link},~{::script})">
+    <link rel="stylesheet" th:href="@{/css/farm-picking-base.css}"
+        media="screen and (min-width: 600px) and (max-width: 999px)">
+    <link rel="stylesheet" th:href="@{/css/farm-picking-pc.css}" media="screen and (min-width: 1000px)">
+</head>
+
+<body>
+    <div th:replace="base :: header"></div>
+
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-2 d-none d-md-block bg-light sidebar" th:replace="base :: side_menu(4)">
+
+            </nav>
+            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+                <h1>■産直ピッキング</h1>
+                <h4>&lt;検索欄&gt;</h4>
+                <form acrion="/farm-picking" th:action="@{/farm-picking}" th:object="${farmFreshPickingInputForm}"
+                    name="farmFreshPickingInputForm" method="POST">
+                    <p>出荷予定日: <input type="date" th:field="*{shippingStartDate}">～<input type="date"
+                            th:field="*{shippingEndDate}" name="shippingEndDate"></p>
+                    <p>
+                        バッチNO:
+                    <div id="ba">
+                        <label class="ch" th:each="item :  ${checkboxItems}">
+                            <input type="checkbox" th:value="${item.value}" th:text="${item.key}"
+                                th:field="*{batchNoList}">
+                        </label>
+                    </div>
+                    </p>
+
+                    <div id="butt">
+                        <input type="submit" value="検索" class="button">
+                        <input type="reset" value="クリア" class="button">
+                    </div>
+                </form>
+                <hr>
+                <table>
+                    <tr>
+                        <th>商品コード</th>
+                        <th>商品名</th>
+                        <th>必要数</th>
+                    </tr>
+                    <tr th:each="record : ${itemList}">
+                        <td th:text="${record.itemCode}"></td>
+                        <td th:text="${record.itemName}"></td>
+                        <td th:text="${record.itemCount}"></td>
+                    </tr>
+                </table>
+            </main>
+        </div>
+    </div>
+    <script th:inline="javascript" type="text/javascript">
+        /*<![CDATA[*/
+        feather.replace();
+        /*]]>*/
+    </script>
+</body>
+
+</html>

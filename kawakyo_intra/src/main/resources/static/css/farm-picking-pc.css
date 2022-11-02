@@ -1,0 +1,49 @@
+body {
+    width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+}
+table, th, td {
+    border-collapse: collapse;
+    border:1px solid #333;
+}
+table{
+    text-align: center;
+    margin: 75px auto;
+}
+#ba {
+    column-count: 3;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+th{
+    font-size: 50px;
+    background-color: yellow;
+}
+td{
+    font-size: 30px;
+}
+.ch {
+    display: block;
+    font-size: 30px;
+}
+p{
+    font-size: 25px;
+}
+h1{
+    font-size: 40px;
+}
+h4{
+    font-size: 35px;
+}
+.button{
+    width: 10em;
+    height: 3em;
+    font-size: 20px;
+    margin: 0 15px;
+}
+#butt{
+    text-align: center;
+    margin: 0 0 20px 0;
+}

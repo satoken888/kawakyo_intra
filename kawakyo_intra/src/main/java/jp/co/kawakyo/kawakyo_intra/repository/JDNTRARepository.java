@@ -17,4 +17,7 @@ public interface JDNTRARepository extends JpaRepository<JDNTRAEntity, String>{
 
 	@Query("select jdnno,jdndt,syuytidt,tokcd,hincd,hinnma,uodsu,datkb,datno from JDNTRAEntity t where datkb = '1' and syuytidt >= :minDate and syuytidt <= :maxDate")
 	List<Object> findByShippingDate(@Param("minDate")String minDate, @Param("maxDate")String maxDate);
+
+	@Query("select jdnno,jdndt,syuytidt,tokcd,hincd,hinnma,uodsu,datkb,datno from JDNTRAEntity t where datkb = '1' and syuytidt >= :minDate and syuytidt <= :maxDate and syubacid in :batchNoList")
+	List<Object> findByShippingDateAndBatchNo(@Param("minDate")String minDate, @Param("maxDate")String maxDate,@Param("batchNoList") List<String> batchNoList);
 }
