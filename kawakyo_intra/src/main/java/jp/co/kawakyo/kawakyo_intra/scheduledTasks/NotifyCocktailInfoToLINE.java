@@ -42,7 +42,7 @@ public class NotifyCocktailInfoToLINE {
     @Autowired
     SearchNeedNoodles searchNeedNoodles;
 
-    // @Scheduled(cron = "0 0 19  * * ? ") // 毎日19時に実施
+    @Scheduled(cron = "0 0 19  * * ? ") // 毎日19時に実施
     public void execute() {
         Calendar cal = Calendar.getInstance();
         Calendar lastYearCal = Calendar.getInstance();

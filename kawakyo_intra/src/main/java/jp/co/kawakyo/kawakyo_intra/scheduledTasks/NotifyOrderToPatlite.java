@@ -31,7 +31,7 @@ public class NotifyOrderToPatlite {
 
     Logger logger = LoggerFactory.getLogger(NotifyOrderToPatlite.class);
 
-    // @Scheduled(cron = "0 */1 8-18 * * MON-SAT")
+    @Scheduled(cron = "0 */1 8-16 * * MON-SAT")
     public void execute() {
         logger.debug("パトライト処理開始");
         logger.debug("lastOrderId : " + lastOrderId);
