@@ -1,13 +1,10 @@
-body {
-    margin: 1.2rem 9vw 2.4rem;
-}
 table, th, td {
     border-collapse: collapse;
     border:1px solid #333;
 }
 table{
     text-align: center;
-    margin: 75px auto;
+    margin: 40px auto;
 }
 #ba {
     column-count: 3;
@@ -16,11 +13,12 @@ table{
     list-style: none;
 }
 th{
-    font-size: 50px;
+    font-size: 15px;
     background-color: yellow;
+    padding:10px 15px;
 }
 td{
-    font-size: 30px;
+    font-size: 20px;
 }
 .ch {
     display: block;

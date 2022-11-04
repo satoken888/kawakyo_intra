@@ -102,6 +102,7 @@ public class ItemManagementService {
             //DBアクセス
             //JDNTRAテーブルから受注情報を検索
             //テーブルにPK定義されていないためObject型で取得
+            batchNoList = changeSpacePack(batchNoList);
             List<Object> dataList = jdntraRepository.findByShippingDateAndBatchNo(startDate, endDate,batchNoList);
 
             Iterator<Object> itr = dataList.iterator();
@@ -121,6 +122,16 @@ public class ItemManagementService {
             }
         }
 
+        return result;
+    }
+
+    private List<String> changeSpacePack(List<String> batchNoList) {
+        List<String> result = new ArrayList<String>();
+        for(String batchNo : batchNoList) {
+            //3桁で空白詰めする
+            batchNo = String.format("%-3s",batchNo);
+            result.add(batchNo);
+        }
         return result;
     }
 
