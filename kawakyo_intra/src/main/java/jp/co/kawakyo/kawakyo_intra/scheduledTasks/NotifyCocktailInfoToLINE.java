@@ -31,6 +31,7 @@ import jp.co.kawakyo.kawakyo_intra.model.logic.EarningsCalculate;
 import jp.co.kawakyo.kawakyo_intra.utils.ConvertUtils;
 import jp.co.kawakyo.kawakyo_intra.utils.KintoneConstants;
 import jp.co.kawakyo.kawakyo_intra.utils.LineNotify;
+import jp.co.kawakyo.kawakyo_intra.utils.SmartMatConnect;
 
 @Component
 public class NotifyCocktailInfoToLINE {
@@ -86,6 +87,15 @@ public class NotifyCocktailInfoToLINE {
                 format.format(now));
         Integer todayNoodles = getTodaysNoodleCount(shippingItemList);
 
+        //スマートマットの重量の取得
+        int measure1 = SmartMatConnect.measure("W32200603382", "e453eff7-b505-4e24-beb9-94490502fbe6");
+        int measure2 = SmartMatConnect.measure("W32200603379", "e453eff7-b505-4e24-beb9-94490502fbe6");
+        int measureWeight = measure1 + measure2;
+        int caseCount = measureWeight / (377 * 40 + 828);
+        int hasuu = (measureWeight % (377 * 40 + 828) - 828) / 377;
+
+        int count = caseCount * 40 + hasuu;
+
         // LINEにながす文章の作成
         String message = "\n本日の売上金額：" + String.format("%,d", monthEarnings.get(today)) + "\n\n" +
                 "今月の累計売上金額：" + String.format("%,d", cumulativeSales) + "\n" +
@@ -97,8 +107,8 @@ public class NotifyCocktailInfoToLINE {
                 "=======================\n" +
                 "本日の出荷麺数：" + String.format("%,d", todayNoodles) + "個です\n" +
                 "★冬場の餅問題対策のため実施↓↓↓\n" +
-                "本日の黄箱5食出荷数："
-                + String.format("%,d", shippingItemList.get("00007600") == null ? 0 : shippingItemList.get("00007600"))
+                "本日の餅在庫数："
+                + String.format("%,d", count)
                 + "個です";
 
         // 営業部LINEへ通知
