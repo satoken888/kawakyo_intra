@@ -59,26 +59,55 @@ public class NotifyOrderToPatlite {
             String yellow = "9";
             String green = "9";
 
-            //店舗からの受注数（当日・明日の出荷予定日を伝票を対象としている）
-            long shopOrderCount = orderList.stream().filter(record -> StringUtils.equals(record.getSyubacid(),"999") || StringUtils.equals(record.getSyubacid(),"900")).count();
-            //当日出荷の一般オーダーの受注数
-            long normalOrderCount = orderList.stream().filter(record -> StringUtils.equals(record.getJucsyydt(),todayStr))
-            .filter(record -> !StringUtils.equals(record.getSyubacid(),"999") && !StringUtils.equals(record.getSyubacid(),"900")).count();
+            // 通販からの受注（通常受注）バッチ９００の場合
+            long tuhanTommorowShipOrderCount = orderList.stream()
+                    .filter(record -> StringUtils.equals(record.getSyubacid().trim(), "900")).count();
+            // 通販からの受注（追加分） バッチ９０１の場合
+            long tuhanAddOrderCount = orderList.stream()
+                    .filter(record -> StringUtils.equals(record.getSyubacid().trim(), "901")).count();
 
-            if(normalOrderCount > 0) {
-                //一般オーダーの受注がある場合
-                //赤ランプを点滅
-                red = "2";
+            // 店舗からの受注(通常受注) バッチ８００の場合
+            long shopTommorowShipOrderCount = orderList.stream()
+                    .filter(record -> StringUtils.equals(record.getSyubacid().trim(), "800")).count();
+            // 店舗からの追加 バッチ８０１の場合
+            long shopAddOrderCount = orderList.stream()
+                    .filter(record -> StringUtils.equals(record.getSyubacid().trim(), "801")).count();
+
+            // 当日出荷の一般オーダーの受注数 バッチ２～４の場合
+            long normalOrderCount = orderList.stream()
+                    .filter(record -> StringUtils.equals(record.getJucsyydt(), todayStr))
+                    .filter(record -> StringUtils.equals(record.getSyubacid().trim(), "2")
+                            || StringUtils.equals(record.getSyubacid().trim(), "3")
+                            || StringUtils.equals(record.getSyubacid().trim(), "4"))
+                    .count();
+
+            if (normalOrderCount > 0) {
+                // 一般オーダーの受注がある場合
+                // 赤ランプを点灯
+                red = "1";
             }
-            if(shopOrderCount > 0) {
-                //自店舗オーダーの受注がある場合
-                //黄色ランプを点滅
+            if (shopAddOrderCount > 0) {
+                // 自店舗追加オーダーの受注がある場合
+                // 黄色ランプを点滅
                 yellow = "2";
+            } else if (shopTommorowShipOrderCount > 0) {
+                // 自店舗通常受注オーダーの場合
+                // 黄色ランプを点灯
+                yellow = "1";
+            }
+            if (tuhanAddOrderCount > 0) {
+                // 通販の追加受注ある場合
+                // 緑ランプを点滅
+                green = "2";
+            } else if (tuhanTommorowShipOrderCount > 0) {
+                // 通販の通常受注がある場合
+                // 緑ランプを点灯
+                green = "1";
             }
 
             // パトライトを表示
             callPatliteFlash(red, yellow, green);
-            
+
             // 取得した受注リストの中から最大の受注Noを取得し、static変数に格納
             // 次回の実行時の開始受注Noに設定する
             JDNTHAEntity maxOrderNoEntity = orderList.stream().max(Comparator.comparing(JDNTHAEntity::getJdnno)).get();
