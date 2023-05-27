@@ -32,6 +32,6 @@ public interface JDNTHARepository extends JpaRepository<JDNTHAEntity, String>, J
 	List<Object> findOrderCustomerGteOrderNo(@Param("jdndt") String jdndt, @Param("jucsyydt") String jucsyydt,
 			@Param("jdnno") String jdnno);
 
-	@Query("select j.tokcd,j.tokrn,j.jucsyydt,sum(j.sbauodkn),t.tannm from JDNTHAEntity j inner join tanmta t on j.tancd = t.tancd where j.jucsyydt = :jucsyydt and j.datkb = '1' group by j.tokcd,j.tokrn,j.jucsyydt")
+	@Query(value = "select jdntha.tokcd,jdntha.tokrn,jdntha.jucsyydt,sum(jdntha.sbauodkn),tanmta.tannm from jdntha inner join tanmta on jdntha.tancd = tanmta.tancd where jdntha.jucsyydt = :jucsyydt and jdntha.datkb = '1' group by jdntha.tokcd,jdntha.tokrn,jdntha.jucsyydt", nativeQuery = true)
 	List<Object> findEarningsAndCustomerName(@Param("jucsyydt") String jucsyydt);
 }
