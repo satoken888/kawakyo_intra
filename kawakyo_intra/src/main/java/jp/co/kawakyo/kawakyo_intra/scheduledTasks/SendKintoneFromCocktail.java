@@ -41,9 +41,13 @@ public class SendKintoneFromCocktail {
     public void sendTodayEarningsFromCocktail() {
         // カクテルから今日の売上情報を取得
         List<Object> earningsAndCustomerList = orderCustomerService.getTodayEarningsAndCustomerName();
-        // kintoneへ取得した情報をアップする
-        // （すでにデータがあれば削除して追加、なければそのまま追加）
-        sendEarningsAndCustomerInfoToKintone(earningsAndCustomerList);
+
+        // カクテルの情報がゼロ件の場合は更新・追加は実施しない
+        if (earningsAndCustomerList != null && earningsAndCustomerList.size() > 0) {
+            // kintoneへ取得した情報をアップする
+            // （すでにデータがあれば削除して追加、なければそのまま追加）
+            sendEarningsAndCustomerInfoToKintone(earningsAndCustomerList);
+        }
     }
 
     /**
