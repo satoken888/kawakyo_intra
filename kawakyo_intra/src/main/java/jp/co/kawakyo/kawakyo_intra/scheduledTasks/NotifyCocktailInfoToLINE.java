@@ -2,6 +2,7 @@ package jp.co.kawakyo.kawakyo_intra.scheduledTasks;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -87,29 +88,31 @@ public class NotifyCocktailInfoToLINE {
                 format.format(now));
         Integer todayNoodles = getTodaysNoodleCount(shippingItemList);
 
-        //スマートマットの重量の取得
-        int measure1 = SmartMatConnect.measure("W32200603382", "e453eff7-b505-4e24-beb9-94490502fbe6");
-        int measure2 = SmartMatConnect.measure("W32200603379", "e453eff7-b505-4e24-beb9-94490502fbe6");
-        int measureWeight = measure1 + measure2;
-        int caseCount = measureWeight / (377 * 40 + 828);
-        int hasuu = (measureWeight % (377 * 40 + 828) - 828) / 377;
+        // スマートマットの重量の取得
+        // int measure1 = SmartMatConnect.measure("W32200603382",
+        // "e453eff7-b505-4e24-beb9-94490502fbe6");
+        // int measure2 = SmartMatConnect.measure("W32200603379",
+        // "e453eff7-b505-4e24-beb9-94490502fbe6");
+        // int measureWeight = measure1 + measure2;
+        // int caseCount = measureWeight / (377 * 40 + 828);
+        // int hasuu = (measureWeight % (377 * 40 + 828) - 828) / 377;
 
-        int count = caseCount * 40 + hasuu;
+        // int count = caseCount * 40 + hasuu;
+
+        // ゼロ割り算対策のため、前年の売上累計金額についてはゼロ処理しておく。
+        String yoyChange = BigDecimal.ZERO.compareTo(earningsToLastYearToday) == 0 ? "昨年実績なし"
+                : dNum.format(earningsToToday.divide(earningsToLastYearToday, 6, RoundingMode.HALF_UP));
 
         // LINEにながす文章の作成
         String message = "\n本日の売上金額：" + String.format("%,d", monthEarnings.get(today)) + "\n\n" +
                 "今月の累計売上金額：" + String.format("%,d", cumulativeSales) + "\n" +
-                "前年同日比：" + dNum.format(earningsToToday.divide(earningsToLastYearToday, 6, BigDecimal.ROUND_HALF_UP))
+                "前年同日比：" + yoyChange
                 + "\n\n" +
                 "昨年の同月売上合計金額：" + String.format("%,d", lastYearMonthEarnings.values().stream().mapToLong(l -> l).sum())
                 + "\n\n" +
                 "みなさん、本日もお疲れ様でした！\n" +
                 "=======================\n" +
-                "本日の出荷麺数：" + String.format("%,d", todayNoodles) + "個です\n" +
-                "★冬場の餅問題対策のため実施↓↓↓\n" +
-                "本日の餅在庫数："
-                + String.format("%,d", count)
-                + "個です";
+                "本日の出荷麺数：" + String.format("%,d", todayNoodles) + "個です\n";
 
         // 営業部LINEへ通知
         LineNotify.notify(message, "XGNXPyyhlUKgItjPt93tVQvX8WTcFnmfkWMKkuZPMgk");
@@ -127,7 +130,7 @@ public class NotifyCocktailInfoToLINE {
 
         // 25gチャーシュー、チャーシューメンマ、醤油スープ、50gメンマの数量をkintoneに送信する
         sendTodayShipItemInfoToKintone(shippingItemList.get("00007184"),
-                shippingItemList.get("00007183"), 
+                shippingItemList.get("00007183"),
                 shippingItemList.get("09000252"),
                 shippingItemList.get("09000253"),
                 shippingItemList.get("09012862"),
@@ -255,12 +258,13 @@ public class NotifyCocktailInfoToLINE {
 
     /**
      * 本日の出荷情報をkintoneに出力
-     * @param slice_chashu 25gチャーシュー出荷数
-     * @param chashu_menma チャーシューメンマ出荷数
-     * @param soysource_soup_solo 醤油スープ単包出荷数
+     * 
+     * @param slice_chashu         25gチャーシュー出荷数
+     * @param chashu_menma         チャーシューメンマ出荷数
+     * @param soysource_soup_solo  醤油スープ単包出荷数
      * @param soysource_soup_combo 醤油スープ2連出荷数
-     * @param soysource_soup_trio 醤油スープ3連出荷数
-     * @param menma_50g メンマ50g出荷数
+     * @param soysource_soup_trio  醤油スープ3連出荷数
+     * @param menma_50g            メンマ50g出荷数
      */
     private void sendTodayShipItemInfoToKintone(Integer slice_chashu,
             Integer chashu_menma,
