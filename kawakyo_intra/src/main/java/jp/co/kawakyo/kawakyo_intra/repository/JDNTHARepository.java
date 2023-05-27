@@ -13,11 +13,12 @@ import org.springframework.stereotype.Repository;
 import jp.co.kawakyo.kawakyo_intra.model.entity.JDNTHAEntity;
 
 @Repository
-public interface JDNTHARepository extends JpaRepository<JDNTHAEntity, String>,JpaSpecificationExecutor<JDNTHAEntity> {
+public interface JDNTHARepository extends JpaRepository<JDNTHAEntity, String>, JpaSpecificationExecutor<JDNTHAEntity> {
 	Page<JDNTHAEntity> findAll(Pageable pageable);
 
 	/**
 	 * 単日の受注金額のトータルを取得
+	 * 
 	 * @param date
 	 * @return
 	 */
@@ -26,7 +27,11 @@ public interface JDNTHARepository extends JpaRepository<JDNTHAEntity, String>,Jp
 
 	@Query("select j.tokcd,j.tokrn,j.jucsyydt,sum(j.sbauodkn) from JDNTHAEntity j where j.jdndt = :jdndt and j.datkb = '1' group by j.tokcd,j.tokrn,j.jucsyydt")
 	List<Object> findOrderCustomerGroupByShipDate(@Param("jdndt") String jdndt);
-	
+
 	@Query("select max(j.jdnno),j.tokcd,j.tokrn,j.jucsyydt,sum(j.sbauodkn),j.syubacid from JDNTHAEntity j where j.jdndt = :jdndt and j.jucsyydt <= :jucsyydt and j.jdnno > :jdnno and j.datkb = '1' group by j.tokcd,j.tokrn,j.jucsyydt,j.syubacid")
-	List<Object> findOrderCustomerGteOrderNo(@Param("jdndt") String jdndt,@Param("jucsyydt") String jucsyydt,@Param("jdnno") String jdnno);
+	List<Object> findOrderCustomerGteOrderNo(@Param("jdndt") String jdndt, @Param("jucsyydt") String jucsyydt,
+			@Param("jdnno") String jdnno);
+
+	@Query("select j.tokcd,j.tokrn,j.jucsyydt,sum(j.sbauodkn),t.tannm from JDNTHAEntity j inner join tanmta t on j.tancd = t.tancd where j.jucsyydt = :jucsyydt and j.datkb = '1' group by j.tokcd,j.tokrn,j.jucsyydt")
+	List<Object> findEarningsAndCustomerName(@Param("jucsyydt") String jucsyydt);
 }
