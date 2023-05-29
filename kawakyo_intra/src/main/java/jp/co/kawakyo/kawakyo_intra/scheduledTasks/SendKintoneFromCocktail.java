@@ -105,13 +105,13 @@ public class SendKintoneFromCocktail {
         while (itr.hasNext()) {
             Object[] obj = (Object[]) itr.next();
             Record record = new Record();
-            record.putField("tokrn", new SingleLineTextFieldValue(String.valueOf(obj[1])));
+            record.putField("tokrn", new SingleLineTextFieldValue(String.valueOf(obj[1]).trim()));
             LocalDate targetDate = DateTimeFormatter.ofPattern("uuuuMMdd")
                     .withResolverStyle(ResolverStyle.STRICT)
                     .parse(String.valueOf(obj[2]), LocalDate::from);
             record.putField("jucsyydt", new DateFieldValue(targetDate));
             record.putField("sbauodkn", new NumberFieldValue(Long.valueOf(String.valueOf(obj[3]))));
-            record.putField("tannm", new SingleLineTextFieldValue(String.valueOf(obj[4])));
+            record.putField("tannm", new SingleLineTextFieldValue(String.valueOf(obj[4]).trim()));
             rtnList.add(record);
         }
 
