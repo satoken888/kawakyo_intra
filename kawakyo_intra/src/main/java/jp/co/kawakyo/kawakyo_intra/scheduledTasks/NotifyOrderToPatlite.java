@@ -44,7 +44,11 @@ public class NotifyOrderToPatlite {
         // 現在時刻の取得
         Calendar cal = Calendar.getInstance();
         String todayStr = new SimpleDateFormat("yyyyMMdd").format(cal.getTime());
-        cal.add(Calendar.DAY_OF_MONTH, 1);
+        if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SATURDAY) {
+            cal.add(Calendar.DAY_OF_MONTH, 2);
+        } else {
+            cal.add(Calendar.DAY_OF_MONTH, 1);
+        }
         String tommorowStr = new SimpleDateFormat("yyyyMMdd").format(cal.getTime());
 
         // 直近10分間の受注で「当日・明日出荷」の受注情報の取得
@@ -63,15 +67,18 @@ public class NotifyOrderToPatlite {
             long tuhanTommorowShipOrderCount = orderList.stream()
                     .filter(record -> StringUtils.equals(record.getSyubacid().trim(), "900")).count();
             // 通販からの受注（追加分） バッチ９０１の場合
-            long tuhanAddOrderCount = orderList.stream()
-                    .filter(record -> StringUtils.equals(record.getSyubacid().trim(), "901")).count();
+            // long tuhanAddOrderCount = orderList.stream()
+            // .filter(record -> StringUtils.equals(record.getSyubacid().trim(),
+            // "901")).count();
 
-            // 店舗からの受注(通常受注) バッチ８００の場合
-            long shopTommorowShipOrderCount = orderList.stream()
-                    .filter(record -> StringUtils.equals(record.getSyubacid().trim(), "800")).count();
-            // 店舗からの追加 バッチ８０１の場合
-            long shopAddOrderCount = orderList.stream()
-                    .filter(record -> StringUtils.equals(record.getSyubacid().trim(), "801")).count();
+            // // 店舗からの受注(通常受注) バッチ８００の場合
+            // long shopTommorowShipOrderCount = orderList.stream()
+            // .filter(record -> StringUtils.equals(record.getSyubacid().trim(),
+            // "800")).count();
+            // // 店舗からの追加 バッチ８０１の場合
+            // long shopAddOrderCount = orderList.stream()
+            // .filter(record -> StringUtils.equals(record.getSyubacid().trim(),
+            // "801")).count();
 
             // 当日出荷の一般オーダーの受注数 バッチ２～４の場合
             long normalOrderCount = orderList.stream()
@@ -86,20 +93,21 @@ public class NotifyOrderToPatlite {
                 // 赤ランプを点灯
                 red = "1";
             }
-            if (shopAddOrderCount > 0) {
-                // 自店舗追加オーダーの受注がある場合
-                // 黄色ランプを点滅
-                yellow = "2";
-            } else if (shopTommorowShipOrderCount > 0) {
-                // 自店舗通常受注オーダーの場合
-                // 黄色ランプを点灯
-                yellow = "1";
-            }
-            if (tuhanAddOrderCount > 0) {
-                // 通販の追加受注ある場合
-                // 緑ランプを点滅
-                green = "2";
-            } else if (tuhanTommorowShipOrderCount > 0) {
+            // if (shopAddOrderCount > 0) {
+            // // 自店舗追加オーダーの受注がある場合
+            // // 黄色ランプを点滅
+            // yellow = "2";
+            // } else if (shopTommorowShipOrderCount > 0) {
+            // // 自店舗通常受注オーダーの場合
+            // // 黄色ランプを点灯
+            // yellow = "1";
+            // }
+            // if (tuhanAddOrderCount > 0) {
+            // // 通販の追加受注ある場合
+            // // 緑ランプを点滅
+            // green = "2";
+            // } else
+            if (tuhanTommorowShipOrderCount > 0) {
                 // 通販の通常受注がある場合
                 // 緑ランプを点灯
                 green = "1";
