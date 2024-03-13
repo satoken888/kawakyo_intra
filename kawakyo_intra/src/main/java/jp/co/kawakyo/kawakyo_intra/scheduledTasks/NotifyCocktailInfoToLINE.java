@@ -32,7 +32,6 @@ import jp.co.kawakyo.kawakyo_intra.model.logic.EarningsCalculate;
 import jp.co.kawakyo.kawakyo_intra.utils.ConvertUtils;
 import jp.co.kawakyo.kawakyo_intra.utils.KintoneConstants;
 import jp.co.kawakyo.kawakyo_intra.utils.LineNotify;
-import jp.co.kawakyo.kawakyo_intra.utils.SmartMatConnect;
 
 @Component
 public class NotifyCocktailInfoToLINE {
@@ -88,6 +87,20 @@ public class NotifyCocktailInfoToLINE {
                 format.format(now));
         Integer todayNoodles = getTodaysNoodleCount(shippingItemList);
 
+        // 累計面数の送信準備
+        // 2024年２月までの破袋数からの算出結果に
+        // ３月以降の出荷面数を追加する
+
+        // ２０２４年２月までの製造麺数の定義
+        Long totalNoodles = 199002341L;
+        // 2024年３月以降の出荷面数情報を取得する
+        Calendar marchOneCal = Calendar.getInstance();
+        marchOneCal.set(2024, 2, 1);
+        Date marchOne = marchOneCal.getTime();
+        Map<String, Integer> thisMonthShippingItemList = searchNeedNoodles.getShippingItemList(format.format(marchOne),
+                format.format(now));
+        totalNoodles += getTodaysNoodleCount(thisMonthShippingItemList);
+
         // スマートマットの重量の取得
         // int measure1 = SmartMatConnect.measure("W32200603382",
         // "e453eff7-b505-4e24-beb9-94490502fbe6");
@@ -112,7 +125,8 @@ public class NotifyCocktailInfoToLINE {
                 + "\n\n" +
                 "みなさん、本日もお疲れ様でした！\n" +
                 "=======================\n" +
-                "本日の出荷麺数：" + String.format("%,d", todayNoodles) + "個です\n";
+                "本日の出荷麺数：" + String.format("%,d", todayNoodles) + "個です\n\n" +
+                "累計出荷麺数：" + String.format("%,d", totalNoodles) + "個です\n";
 
         // 営業部LINEへ通知
         LineNotify.notify(message, "XGNXPyyhlUKgItjPt93tVQvX8WTcFnmfkWMKkuZPMgk");
